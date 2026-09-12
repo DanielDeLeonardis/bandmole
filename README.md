@@ -11,7 +11,7 @@ BandMole is a Flutter application designed for musicians and performers to displ
 - **Automated Lyrics Scrolling**:
   - Continuous, linear auto-scrolling with configurable scroll speeds (1 to 99).
   - Play / Stop toggle with immediate halt on touch gestures or stop button.
-  - Quick navigation controls: **Go to Start** and **Go to End** with automatic scroll-boundary detection.
+  - Quick navigation controls: **Go to Start** and **Go to End** driven by a unified scroll-command state in Riverpod.
   - Automatic button state updates (disables transport buttons when already at the start or end, or when content fits within the screen).
 
 - **Typography & Readability**:
@@ -45,15 +45,12 @@ lib/
 ├── main.dart                  # Application entry point & route definition
 ├── models/                    # Data models (Freezed models, Enums, Themes)
 │   ├── app_themes.dart        # Available theme definitions and ThemeData maps
-│   ├── auto_scrollable_text.dart # State model for scroll parameters & boundaries
+│   ├── auto_scrollable_text.dart # Unified scroll state, boundaries, and pending commands
 │   ├── song.dart              # Song data representation & encoding state
-│   └── text_event.dart        # Transport & scrolling event definitions
 ├── providers/                 # Riverpod notifiers and providers
 │   ├── app_themes_provider.dart
-│   ├── auto_scrollable_text_event_provider.dart
 │   └── auto_scrollable_text_provider.dart
 ├── service/                   # Low-level service implementations
-│   ├── auto_scrollable_text_service.dart
 │   ├── file_service.dart
 │   └── preference_service.dart
 ├── views/                     # Top-level screen views

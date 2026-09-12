@@ -5,6 +5,14 @@ All notable changes to the BandMole project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Auto Scrollable Text Module (`auto_scrollable_text`)**:
+  - Unified jump navigation and scroll state into a single `AutoScrollableTextNotifier` flow by adding `pendingCommand` to the `AutoScrollableText` model and routing "Go to start" / "Go to end" through the same Riverpod state used for play, stop, font size, and speed controls.
+  - Removed the separate event-stream style jump path from the architecture docs and aligned the README project structure with the current provider/model layout.
+  - Kept the existing auto-scroll boundary and toggle behavior covered by the unit and widget tests in `test/auto_scrollable_text_test.dart` and `test/widget_test.dart`.
+
 ## [1.0.3] - 2026-09-11
 
 ### Fixed
