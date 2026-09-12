@@ -1,6 +1,6 @@
-import 'package:bandmole/providers/app_themes_provider.dart';
+import 'package:bandmole/src/features/preferences/presentation/providers/app_themes_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:bandmole/models/app_themes.dart';
+import 'package:bandmole/src/features/preferences/domain/app_themes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PreferenceView extends ConsumerWidget {
@@ -16,22 +16,16 @@ class PreferenceView extends ConsumerWidget {
         padding: const EdgeInsets.all(8),
         itemCount: AppTheme.values.length,
         itemBuilder: (context, index) {
-          // Enums expose their values as a list - perfect for ListView
-          // Store the theme for the current ListView item
           final itemAppTheme = AppTheme.values[index];
           return Card(
-            // Style the cards with the to-be-selected theme colors
             color: appThemeData[itemAppTheme]!.primaryColor,
             child: ListTile(
               title: Text(
                 itemAppTheme.toString(),
-                // To show light text with the dark variants...
                 style: appThemeData[itemAppTheme]!.textTheme.bodyLarge,
               ),
               onTap: () {
-                ref
-                    .read(appThemeProvider.notifier)
-                    .setAppTheme(itemAppTheme);
+                ref.read(appThemeProvider.notifier).setAppTheme(itemAppTheme);
               },
             ),
           );

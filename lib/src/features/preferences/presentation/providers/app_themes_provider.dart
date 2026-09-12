@@ -1,5 +1,5 @@
-import 'package:bandmole/models/app_themes.dart';
-import 'package:bandmole/service/preference_service.dart';
+import 'package:bandmole/src/features/preferences/domain/app_themes.dart';
+import 'package:bandmole/src/features/preferences/data/preference_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,4 +20,3 @@ final appThemeProvider =
     AsyncNotifierProvider<AppThemeNotifier, ThemeData>(
   AppThemeNotifier.new,
 );
-

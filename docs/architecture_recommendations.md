@@ -50,11 +50,11 @@ When `jumpToStart()` is called, the notifier sets `pendingCommand = ScrollComman
 
 ## 3. Recommendation 2: Adopt a Feature-First Layered Project Structure
 
-### Current Issue
-The current structure groups files strictly by technical role (`models/`, `providers/`, `service/`, `views/`, `widgets/`). As features grow, navigation and maintenance across directories become fragmented.
+### Status
+Implemented in the current codebase.
 
-### Proposed Solution
-Adopt a feature-first structure with clear Separation of Concerns (Presentation / Domain / Data), as recommended by Flutter architecture guidelines:
+### Result
+The application now lives under a feature-first tree in `lib/src/`:
 
 ```text
 lib/
@@ -79,14 +79,15 @@ lib/
 |           `-- presentation/
 ```
 
+The old top-level `models/`, `providers/`, `service/`, `views/`, and `widgets/` folders have been removed.
+
 ---
 
 ## 4. Recommendation 3: Implement the Repository Pattern for File Access
 
 ### Current Issue
-1. `FilePicker` is placed in `lib/widgets/file_picker_widget.dart` despite having no widget code.
-2. It hardcodes a dependency on `filepicker_windows`, restricting the app from compiling or running on other platforms.
-3. In `MainView`, button handlers directly orchestrate file dialogs, asynchronous I/O, error formatting, and navigation.
+1. The file picker still hardcodes a dependency on `filepicker_windows`, restricting the app from compiling or running on other platforms.
+2. In `MainView`, button handlers directly orchestrate file dialogs, asynchronous I/O, error formatting, and navigation.
 
 ### Proposed Solution
 1. Define an abstract `SongRepository` in the domain layer:
@@ -187,11 +188,11 @@ As a lyrics reader for musicians, BandMole's domain capabilities can be extended
 | Priority | Initiative | Effort | Impact | Risk |
 |---|---|---|---|---|
 | **Completed** | Unified scrolling state into a single Riverpod notifier; removed the stream-based jump path | Low | High | Low |
-| **Phase 1** (High) | Relocate `FilePicker` from `widgets/` to `service/` or `data/` | Low | Medium | None |
+| **Completed** | Transitioned to a feature-first directory structure (`lib/src/features/...`) | Medium | High | Medium |
+| **Completed** | Relocated `FilePicker` into the `song_loader` feature data layer | Low | Medium | None |
 | **Phase 1** (High) | Standardize route navigation across `MainView` and `main.dart` | Low | Medium | Low |
 | **Phase 2** (Medium) | Introduce `SongRepository` and abstract platform file picker (`package:file_picker`) | Medium | High | Low |
 | **Phase 2** (Medium) | Decouple `Song` domain model from `dart:io` | Low | Medium | Low |
 | **Phase 2** (Medium) | Introduce `SongLoaderController` to remove business logic from `MainView` | Medium | High | Low |
-| **Phase 3** (Long-term) | Transition to Feature-First directory structure (`lib/src/features/...`) | Medium | High | Medium |
 | **Phase 3** (Long-term) | Add ChordPro parsing and chord transposition domain logic | High | High | Low |
 

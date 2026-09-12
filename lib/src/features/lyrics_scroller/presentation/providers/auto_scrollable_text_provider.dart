@@ -1,4 +1,4 @@
-import 'package:bandmole/models/auto_scrollable_text.dart';
+import 'package:bandmole/src/features/lyrics_scroller/domain/auto_scrollable_text.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AutoScrollableTextNotifier extends Notifier<AutoScrollableText> {

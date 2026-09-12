@@ -1,11 +1,11 @@
 import 'dart:math';
-import 'package:bandmole/models/auto_scrollable_text.dart';
-import 'package:bandmole/providers/auto_scrollable_text_provider.dart';
+
+import 'package:bandmole/src/features/lyrics_scroller/domain/auto_scrollable_text.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/auto_scrollable_text_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Automatically scroll text at a specified speed
 class AutoScrollableTextWidget extends ConsumerStatefulWidget {
   final String text;
 
@@ -48,9 +48,9 @@ class _AutoScrollableTextWidgetState
   void _updatePositionState() {
     if (mounted && _scrollController.hasClients) {
       _textNotifier.setPositionState(
-            screenOffset: _scrollController.offset,
-            screenMaxExtent: _scrollController.position.maxScrollExtent,
-          );
+        screenOffset: _scrollController.offset,
+        screenMaxExtent: _scrollController.position.maxScrollExtent,
+      );
     }
   }
 

@@ -1,5 +1,5 @@
-import 'package:bandmole/models/auto_scrollable_text.dart';
-import 'package:bandmole/providers/auto_scrollable_text_provider.dart';
+import 'package:bandmole/src/features/lyrics_scroller/domain/auto_scrollable_text.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/auto_scrollable_text_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

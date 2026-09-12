@@ -1,6 +1,6 @@
 import 'package:bandmole/main.dart';
-import 'package:bandmole/views/preferences_view.dart';
-import 'package:bandmole/views/song_view.dart';
+import 'package:bandmole/src/features/preferences/presentation/views/preferences_view.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/views/song_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

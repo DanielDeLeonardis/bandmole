@@ -1,13 +1,9 @@
-import 'package:bandmole/providers/auto_scrollable_text_provider.dart';
-import 'package:bandmole/widgets/auto_scrollable_text_widget.dart';
-import 'package:bandmole/widgets/tool_tip_raised_button_widget.dart';
-import 'package:bandmole/widgets/tool_tip_rounded_text_widget.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/auto_scrollable_text_provider.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/widgets/auto_scrollable_text_widget.dart';
+import 'package:bandmole/src/core/widgets/tool_tip_raised_button_widget.dart';
+import 'package:bandmole/src/core/widgets/tool_tip_rounded_text_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-// Automatically scroll some text at a specified speed
-// Begin the scroll when the button is pressed and stop it when the button is
-// pressed again
 
 class SongView extends ConsumerWidget {
   final String text;

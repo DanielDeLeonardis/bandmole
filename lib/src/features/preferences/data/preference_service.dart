@@ -1,4 +1,4 @@
-import 'package:bandmole/models/app_themes.dart';
+import 'package:bandmole/src/features/preferences/domain/app_themes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<AppTheme> getThemePreference() async {
@@ -11,4 +11,3 @@ Future<void> setThemePreference(AppTheme appTheme) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('themeData', appTheme.name);
 }
-

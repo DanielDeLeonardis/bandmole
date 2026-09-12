@@ -12,18 +12,18 @@ BandMole is a Flutter application designed for musicians and performers to displ
   - Continuous, linear auto-scrolling with configurable scroll speeds (1 to 99).
   - Play / Stop toggle with immediate halt on touch gestures or stop button.
   - Quick navigation controls: **Go to Start** and **Go to End** driven by a unified scroll-command state in Riverpod.
-  - Automatic button state updates (disables transport buttons when already at the start or end, or when content fits within the screen).
+  - Automatic button state updates, disabling transport buttons when already at the start or end, or when content fits within the screen.
 
 - **Typography & Readability**:
   - Monospaced typography (`Consolas`) to maintain accurate alignment of chords and lyrics.
-  - Live font size adjustments (bounded with minimum size constraints) with instant visual feedback.
+  - Live font size adjustments, bounded with minimum size constraints, with instant visual feedback.
 
 - **Song File Management**:
   - Native file picker to open local text-based chord and lyric files.
   - UTF-8 encoding validation and malformed character handling with user feedback.
 
 - **Theme Preferences**:
-  - Customizable color themes (including dark themes optimized for low-light stage performance).
+  - Customizable color themes, including dark themes optimized for low-light stage performance.
   - Asynchronous theme persistence via local preferences.
 
 ---
@@ -40,28 +40,45 @@ BandMole is a Flutter application designed for musicians and performers to displ
 
 ## Project Structure
 
-```
+```text
 lib/
-├── main.dart                  # Application entry point & route definition
-├── models/                    # Data models (Freezed models, Enums, Themes)
-│   ├── app_themes.dart        # Available theme definitions and ThemeData maps
-│   ├── auto_scrollable_text.dart # Unified scroll state, boundaries, and pending commands
-│   ├── song.dart              # Song data representation & encoding state
-├── providers/                 # Riverpod notifiers and providers
-│   ├── app_themes_provider.dart
-│   └── auto_scrollable_text_provider.dart
-├── service/                   # Low-level service implementations
-│   ├── file_service.dart
-│   └── preference_service.dart
-├── views/                     # Top-level screen views
-│   ├── main_view.dart         # Song loading & landing page
-│   ├── preferences_view.dart  # Theme selection view
-│   └── song_view.dart         # Main lyrics display & transport controls
-└── widgets/                   # Modular UI components
-    ├── auto_scrollable_text_widget.dart # Smooth animated scroll renderer
-    ├── file_picker_widget.dart
-    ├── tool_tip_raised_button_widget.dart
-    └── tool_tip_rounded_text_widget.dart
+|-- main.dart                  # Application entry point
+`-- src/
+    |-- app.dart               # MaterialApp configuration and route handling
+    |-- core/
+    |   `-- widgets/
+    |       |-- tool_tip_raised_button_widget.dart
+    |       `-- tool_tip_rounded_text_widget.dart
+    `-- features/
+        |-- lyrics_scroller/
+        |   |-- domain/
+        |   |   `-- auto_scrollable_text.dart
+        |   `-- presentation/
+        |       |-- providers/
+        |       |   `-- auto_scrollable_text_provider.dart
+        |       |-- views/
+        |       |   `-- song_view.dart
+        |       `-- widgets/
+        |           `-- auto_scrollable_text_widget.dart
+        |-- preferences/
+        |   |-- data/
+        |   |   `-- preference_service.dart
+        |   |-- domain/
+        |   |   `-- app_themes.dart
+        |   `-- presentation/
+        |       |-- providers/
+        |       |   `-- app_themes_provider.dart
+        |       `-- views/
+        |           `-- preferences_view.dart
+        `-- song_loader/
+            |-- data/
+            |   |-- file_picker.dart
+            |   `-- file_service.dart
+            |-- domain/
+            |   `-- song.dart
+            `-- presentation/
+                `-- views/
+                    `-- main_view.dart
 ```
 
 ---
@@ -71,7 +88,7 @@ lib/
 ### Prerequisites
 
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.13.1 or higher)
-- Supported desktop/mobile platform toolchain (e.g. Windows C++ build tools for Windows desktop)
+- Supported desktop/mobile platform toolchain, for example Windows C++ build tools for Windows desktop
 
 ### Installation
 
@@ -100,7 +117,7 @@ lib/
 
 ## Testing & Static Analysis
 
-Run the full test suite (unit and widget tests):
+Run the full test suite:
 ```bash
 flutter test
 ```
@@ -109,3 +126,4 @@ Run static analysis:
 ```bash
 dart analyze
 ```
+

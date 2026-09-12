@@ -1,5 +1,5 @@
-import 'package:bandmole/models/app_themes.dart';
-import 'package:bandmole/providers/app_themes_provider.dart';
+import 'package:bandmole/src/features/preferences/domain/app_themes.dart';
+import 'package:bandmole/src/features/preferences/presentation/providers/app_themes_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';

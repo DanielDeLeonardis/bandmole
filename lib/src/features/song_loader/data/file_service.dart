@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:bandmole/models/song.dart';
+import 'package:bandmole/src/features/song_loader/domain/song.dart';
 
 Future<Song> getSong(File file) async {
   var isMalformed = false;

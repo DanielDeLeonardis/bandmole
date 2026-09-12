@@ -20,7 +20,8 @@ class ToolTipRaisedButton extends StatelessWidget {
       message: tip,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-            backgroundColor: colour ?? Theme.of(context).primaryColor),
+          backgroundColor: colour ?? Theme.of(context).primaryColor,
+        ),
         onPressed: onPressed == null ? null : () => onPressed!(),
         child: icon,
       ),
