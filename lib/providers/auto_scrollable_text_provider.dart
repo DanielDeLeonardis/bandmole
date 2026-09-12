@@ -70,11 +70,32 @@ class AutoScrollableTextNotifier extends Notifier<AutoScrollableText> {
     return state.isScrolling;
   }
 
+  void jumpToStart() {
+    state = state.copyWith(
+      isScrolling: false,
+      pendingCommand: ScrollCommand.jumpToStart,
+    );
+  }
+
+  void jumpToEnd() {
+    state = state.copyWith(
+      isScrolling: false,
+      pendingCommand: ScrollCommand.jumpToEnd,
+    );
+  }
+
+  void clearPendingCommand() {
+    if (state.pendingCommand != null) {
+      state = state.copyWith(pendingCommand: null);
+    }
+  }
+
   void resetScrollState() {
     state = state.copyWith(
       isScrolling: false,
       isAtStart: true,
       isAtEnd: false,
+      pendingCommand: null,
     );
   }
 }

@@ -1,5 +1,3 @@
-import 'package:bandmole/models/text_event.dart';
-import 'package:bandmole/providers/auto_scrollable_text_event_provider.dart';
 import 'package:bandmole/providers/auto_scrollable_text_provider.dart';
 import 'package:bandmole/widgets/auto_scrollable_text_widget.dart';
 import 'package:bandmole/widgets/tool_tip_raised_button_widget.dart';
@@ -44,17 +42,11 @@ class SongView extends ConsumerWidget {
     }
 
     void scrollToStart() {
-      ref
-          .read(autoScrollableTextEventProvider.notifier)
-          .stream
-          .addEvent(TextEvent.goToStart);
+      ref.read(autoScrollableTextProvider.notifier).jumpToStart();
     }
 
     void scrollToEnd() {
-      ref
-          .read(autoScrollableTextEventProvider.notifier)
-          .stream
-          .addEvent(TextEvent.goToEnd);
+      ref.read(autoScrollableTextProvider.notifier).jumpToEnd();
     }
 
     return Scaffold(

@@ -1,7 +1,5 @@
-import 'dart:async';
 import 'dart:math';
-import 'package:bandmole/models/text_event.dart';
-import 'package:bandmole/providers/auto_scrollable_text_event_provider.dart';
+import 'package:bandmole/models/auto_scrollable_text.dart';
 import 'package:bandmole/providers/auto_scrollable_text_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -25,30 +23,12 @@ class _AutoScrollableTextWidgetState
     extends ConsumerState<AutoScrollableTextWidget>
     with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-  StreamSubscription<TextEvent>? _eventSubscription;
   late final AutoScrollableTextNotifier _textNotifier;
 
   @override
   void initState() {
     super.initState();
     _textNotifier = ref.read(autoScrollableTextProvider.notifier);
-    _eventSubscription = ref
-        .read(autoScrollableTextEventProvider.notifier)
-        .stream
-        .getStream()
-        .listen((event) {
-      if (!mounted) return;
-      switch (event) {
-        case TextEvent.goToStart:
-          _scrollToStart();
-          break;
-        case TextEvent.goToEnd:
-          _scrollToEnd();
-          break;
-        default:
-          break;
-      }
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -60,7 +40,6 @@ class _AutoScrollableTextWidgetState
 
   @override
   void dispose() {
-    _eventSubscription?.cancel();
     _textNotifier.setIsScrolling(false);
     _scrollController.dispose();
     super.dispose();
@@ -163,7 +142,18 @@ class _AutoScrollableTextWidgetState
 
     ref.listen(autoScrollableTextProvider, (previous, next) {
       if (previous == null) return;
-      if (previous.isScrolling != next.isScrolling) {
+      if (next.pendingCommand != null) {
+        final command = next.pendingCommand!;
+        _textNotifier.clearPendingCommand();
+        switch (command) {
+          case ScrollCommand.jumpToStart:
+            _scrollToStart();
+            break;
+          case ScrollCommand.jumpToEnd:
+            _scrollToEnd();
+            break;
+        }
+      } else if (previous.isScrolling != next.isScrolling) {
         _scrollToggleAnimate(
           scrollSpeed: next.scrollSpeed,
           isScrolling: next.isScrolling,
