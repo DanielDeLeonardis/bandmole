@@ -86,24 +86,34 @@ The old top-level `models/`, `providers/`, `service/`, `views/`, and `widgets/` 
 ## 4. Recommendation 3: Implement the Repository Pattern for File Access
 
 ### Current Issue
-1. The file picker still hardcodes a dependency on `filepicker_windows`, restricting the app from compiling or running on other platforms.
-2. In `MainView`, button handlers directly orchestrate file dialogs, asynchronous I/O, error formatting, and navigation.
+Before the refactor, the file picker hardcoded a dependency on `filepicker_windows`, and `MainView` directly orchestrated file dialogs, asynchronous I/O, error formatting, and navigation.
 
 ### Proposed Solution
-1. Define an abstract `SongRepository` in the domain layer:
+Implemented in the current codebase.
 
-```dart
-abstract class SongRepository {
-  Future<SongFile?> pickSongFile();
-  Future<Song> loadSong(SongFile file);
-}
+### Result
+The song-loading flow now goes through a repository boundary instead of calling platform APIs directly from the view layer:
+
+```text
+MainView
+  -> SongRepository
+      -> SongFilePicker
+      -> SongFileReader
 ```
 
-2. Implement platform-agnostic and Windows-specific data sources:
-   - Use dependency injection to provide the appropriate picker implementation, or use a cross-platform package such as `file_picker`.
+The domain layer now owns a platform-neutral file model:
+- `SongFile` stores the selected file path without exposing `dart:io File`.
+- `SongRepository` exposes `pickSongFile()` and `loadSong(SongFile)` as the only public file-access operations.
 
-3. Decouple `Song` from `dart:io`:
-   - Refactor `Song` so it does not contain a raw `dart:io File` handle.
+The data layer now provides platform-specific implementations behind the repository:
+- `WindowsSongFilePicker` wraps `filepicker_windows`.
+- `UnsupportedSongFilePicker` allows non-Windows builds to compile and fail gracefully at runtime.
+- `IoSongFileReader` reads the selected file bytes for decoding.
+
+`MainView` now only reacts to repository outcomes:
+- show a snackbar when no file is selected,
+- show a snackbar when the file has encoding issues,
+- navigate to `SongView` when the song text is loaded successfully.
 
 ---
 
@@ -191,8 +201,6 @@ As a lyrics reader for musicians, BandMole's domain capabilities can be extended
 | **Completed** | Transitioned to a feature-first directory structure (`lib/src/features/...`) | Medium | High | Medium |
 | **Completed** | Relocated `FilePicker` into the `song_loader` feature data layer | Low | Medium | None |
 | **Phase 1** (High) | Standardize route navigation across `MainView` and `main.dart` | Low | Medium | Low |
-| **Phase 2** (Medium) | Introduce `SongRepository` and abstract platform file picker (`package:file_picker`) | Medium | High | Low |
-| **Phase 2** (Medium) | Decouple `Song` domain model from `dart:io` | Low | Medium | Low |
+| **Completed** | Introduce `SongRepository`, abstract platform file picker, and decouple `Song` from `dart:io` | Medium | High | Low |
 | **Phase 2** (Medium) | Introduce `SongLoaderController` to remove business logic from `MainView` | Medium | High | Low |
 | **Phase 3** (Long-term) | Add ChordPro parsing and chord transposition domain logic | High | High | Low |
-

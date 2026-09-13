@@ -1,7 +1,7 @@
-import 'dart:io';
+import 'package:bandmole/src/features/song_loader/domain/song_file.dart';
 
 class Song {
-  final File file;
+  final SongFile file;
   final String? text;
   final bool isMalformed;
 

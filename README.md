@@ -19,8 +19,8 @@ BandMole is a Flutter application designed for musicians and performers to displ
   - Live font size adjustments, bounded with minimum size constraints, with instant visual feedback.
 
 - **Song File Management**:
-  - Native file picker to open local text-based chord and lyric files.
-  - UTF-8 encoding validation and malformed character handling with user feedback.
+  - Repository-based song loading flow that separates the UI from file access and decoding concerns.
+  - Platform-specific file selection behind a repository abstraction, with UTF-8 encoding validation and malformed character handling.
 
 - **Theme Preferences**:
   - Customizable color themes, including dark themes optimized for low-light stage performance.
@@ -34,7 +34,7 @@ BandMole is a Flutter application designed for musicians and performers to displ
 - **State Management**: [Flutter Riverpod](https://riverpod.dev/) (`flutter_riverpod` + `riverpod_annotation` / `riverpod_generator`)
 - **Data Modeling**: [Freezed](https://pub.dev/packages/freezed) immutable state objects
 - **Storage**: [shared_preferences](https://pub.dev/packages/shared_preferences) for persistent configuration
-- **File System**: [filepicker_windows](https://pub.dev/packages/filepicker_windows) for native desktop file selection
+- **File System**: repository-based file access with `filepicker_windows` used only by the Windows picker implementation
 
 ---
 
@@ -72,11 +72,21 @@ lib/
         |           `-- preferences_view.dart
         `-- song_loader/
             |-- data/
-            |   |-- file_picker.dart
-            |   `-- file_service.dart
+            |   |-- io_song_file_reader.dart
+            |   |-- song_file_picker.dart
+            |   |-- song_file_reader.dart
+            |   |-- song_repository_impl.dart
+            |   |-- unsupported_song_file_picker.dart
+            |   `-- windows_song_file_picker.dart
             |-- domain/
-            |   `-- song.dart
+            |   |-- song.dart
+            |   |-- song_file.dart
+            |   `-- song_repository.dart
             `-- presentation/
+                |-- providers/
+                |   |-- song_repository_provider.dart
+                |   |-- song_repository_provider_io.dart
+                |   `-- song_repository_provider_stub.dart
                 `-- views/
                     `-- main_view.dart
 ```
@@ -126,4 +136,3 @@ Run static analysis:
 ```bash
 dart analyze
 ```
-

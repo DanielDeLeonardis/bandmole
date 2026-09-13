@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Adopted a feature-first layered layout under `lib/src/` and moved the app into `core/` and `features/` folders for `lyrics_scroller`, `song_loader`, and `preferences`.
   - Removed the old top-level `models/`, `providers/`, `service/`, `views/`, and `widgets/` folders so the source tree now matches the layered architecture docs.
 
+- **Song Loading / Repository Pattern**:
+  - Introduced `SongRepository` as the domain boundary for file picking and file loading, with `SongFile` used as a platform-neutral file handle.
+  - Split file access into `SongFilePicker`, `SongFileReader`, and `SongRepositoryImpl`, and moved the Windows picker behind a platform-specific implementation.
+  - Refactored `MainView` to call the repository instead of directly orchestrating file dialogs, file reads, and decoding.
+  - Updated `Song` so it no longer depends on `dart:io File`.
+  - Added unit coverage for the repository implementation in `test/src/features/song_loader/data/song_repository_impl_test.dart`.
+
 - **Auto Scrollable Text Module (`auto_scrollable_text`)**:
   - Unified jump navigation and scroll state into a single `AutoScrollableTextNotifier` flow by adding `pendingCommand` to the `AutoScrollableText` model and routing "Go to start" / "Go to end" through the same Riverpod state used for play, stop, font size, and speed controls.
   - Removed the separate event-stream style jump path from the architecture docs and aligned the README project structure with the current provider/model layout.
