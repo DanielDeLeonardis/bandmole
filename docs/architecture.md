@@ -18,13 +18,17 @@ The codebase is now organized in a feature-first structure under `lib/src/` with
 
 ## 2. High-Level System Architecture
 
-The application is structured into four primary vertical tiers:
+The application is structured into five primary vertical tiers:
 
 ```text
 Presentation Layer
   - Views: MainView, SongView, PreferenceView
   - Widgets: AutoScrollableTextWidget, custom tooltip widgets
   - Reads and writes Riverpod state
+
+Navigation & Routing
+  - appRouterProvider (GoRouter)
+  - Named routes for main, lyrics, and preferences
 
 State Management & Logic
   - AutoScrollableTextNotifier (Notifier<AutoScrollableText>)
@@ -49,8 +53,8 @@ Domain Models
 - **`MainView` (`lib/src/features/song_loader/presentation/views/main_view.dart`)**
   - The initial landing screen.
   - Hosts the file picker entry point (`Open song`) and navigation action to preferences.
-  - Dispatches song loading to `SongLoaderController`, then handles success/error outcomes via listener callbacks.
-  - Uses manual `Navigator.push` to transition to `SongView` and `PreferenceView`.
+  - Dispatches song loading to `SongLoaderController`, then handles success/error outcomes via a lifecycle-safe manual listener that defers snackbars and navigation to post-frame callbacks.
+  - Uses declarative named routes via `context.pushNamed()` to transition to `SongView` and `PreferenceView`.
 
 - **`SongView` (`lib/src/features/lyrics_scroller/presentation/views/song_view.dart`)**
   - The primary performance display.
@@ -106,7 +110,7 @@ State management is implemented using Riverpod:
 3. **`SongLoaderController` (`song_loader_controller.dart`)**
    - Manages the song-loading workflow as an `AsyncNotifier<Song?>`.
    - Dispatches repository calls for song file selection and loading.
-   - Exposes loading, success, and error states to `MainView`, which reacts with snackbars and navigation.
+   - Exposes loading, success, and error states to `MainView`, which reacts with snackbars and navigation after the current frame has settled.
 
 ---
 
@@ -161,7 +165,7 @@ The former auto-scroll stream service is no longer part of the current implement
   -> Decode bytes as UTF-8
      - Success: isMalformed = false
      - Failure: fallback with allowMalformed = true, isMalformed = true
-  -> MainView navigates to SongView(text: song.text)
+  -> MainView calls context.pushNamed(AppRoutes.lyrics, extra: song.text)
 ```
 
 ### 4.2 Auto-Scroll Execution & Animation Flow
@@ -170,7 +174,7 @@ The former auto-scroll stream service is no longer part of the current implement
 [User taps Play Icon]
   -> SongView calls autoScrollableTextProvider.notifier.toggleIsScrolling()
   -> Riverpod emits updated AutoScrollableText (isScrolling: true)
-  -> AutoScrollableTextWidget.ref.listen detects state change
+  -> AutoScrollableTextWidget.manual listener detects state change
   -> Calculates duration = (maxScrollExtent - offset) / (speed * 10)
   -> ScrollController.animateTo(maxScrollExtent, curve: Curves.linear)
   -> Scroll notifications update setPositionState(screenOffset, screenMaxExtent)
@@ -185,7 +189,7 @@ The former auto-scroll stream service is no longer part of the current implement
 [User taps 'Go to end' / 'Go to start']
   -> SongView calls autoScrollableTextProvider.notifier.jumpToEnd() / jumpToStart()
   -> AutoScrollableTextNotifier sets pendingCommand on AutoScrollableText
-  -> AutoScrollableTextWidget.ref.listen consumes pendingCommand and clears it
+  -> AutoScrollableTextWidget.manual listener consumes pendingCommand and clears it
   -> AutoScrollableTextWidget animates to minScrollExtent or maxScrollExtent
   -> Post-frame callback triggers setPositionState to update isAtStart and isAtEnd
   -> SongView rebuilds and the appropriate button disables automatically
@@ -199,17 +203,18 @@ The former auto-scroll stream service is no longer part of the current implement
 2. **Robust Scroll Synchronization**: Post-frame callbacks and `ScrollNotification` listeners help avoid mutating provider state during Flutter build phases.
 3. **Unified Command State**: Jump navigation now uses the same notifier and model as the rest of the scroll controls, which keeps state transitions easier to follow and avoids stream lifecycle management.
 4. **Presentation Controller Separation**: `SongLoaderController` keeps the file-picking workflow out of `MainView`, which leaves the view focused on user interaction and navigation.
-5. **Repository-Based File Access**: Song loading now flows through `SongRepository`, `SongFilePicker`, and `SongFileReader`, which keeps file selection and decoding out of the presentation layer and makes the data boundary easier to test.
-6. **Feature-First Layout**: Related code now lives together under `lib/src/features/`, which makes the three app areas easier to navigate.
-7. **Defensive Decoding**: File ingestion accounts for character encoding anomalies, preventing crashes on non-UTF-8 song files.
-8. **High Automated Test Coverage**: Unit tests cover provider mutations and boundary conditions; widget tests validate multi-step interactive workflows, routing, and scrolling actions.
+5. **Declarative Routing**: `MyApp` now uses `MaterialApp.router` with a centralized `GoRouter`, which standardizes route handling across the app and makes future deep-link support easier to add.
+6. **Repository-Based File Access**: Song loading now flows through `SongRepository`, `SongFilePicker`, and `SongFileReader`, which keeps file selection and decoding out of the presentation layer and makes the data boundary easier to test.
+7. **Feature-First Layout**: Related code now lives together under `lib/src/features/`, which makes the three app areas easier to navigate.
+8. **Defensive Decoding**: File ingestion accounts for character encoding anomalies, preventing crashes on non-UTF-8 song files.
+9. **High Automated Test Coverage**: Unit tests cover provider mutations and boundary conditions; widget tests validate multi-step interactive workflows, routing, and scrolling actions.
 
 ---
 
 ## 6. Architectural Weaknesses & Technical Debt
 
-1. **Navigation Still View-Owned**
-   - `MainView` still performs navigation and snackbar presentation in response to controller state, which is acceptable for UI concerns but keeps some presentation orchestration inline.
+1. **Presentation Side Effects**
+   - `MainView` still performs snackbar presentation and route triggering in response to controller state, which is acceptable for UI concerns but keeps some orchestration inline.
 
-2. **Inconsistent Navigation Patterns**
-   - `main.dart` configures dynamic `onGenerateRoute` supporting `/`, `/lyrics`, and `/preferences`, but `MainView` bypasses this by constructing `MaterialPageRoute` directly with hardcoded widget constructors.
+2. **Flat Route Tree**
+   - The router is centralized, but the app currently uses a simple top-level route list; nested shells or route guards are not needed yet.

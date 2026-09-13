@@ -26,12 +26,17 @@ BandMole is a Flutter application designed for musicians and performers to displ
   - Customizable color themes, including dark themes optimized for low-light stage performance.
   - Asynchronous theme persistence via local preferences.
 
+- **Declarative Navigation**:
+  - Centralized route handling with `GoRouter` and named routes for the main screen, lyrics view, and preferences view.
+  - Song and preference transitions are handled through `MaterialApp.router` instead of imperative page pushes.
+
 ---
 
 ## Architecture & Tech Stack
 
 - **Framework**: [Flutter](https://flutter.dev/) (Dart SDK `^3.13.1`)
 - **State Management**: [Flutter Riverpod](https://riverpod.dev/) (`flutter_riverpod` + `riverpod_annotation` / `riverpod_generator`)
+- **Navigation**: [GoRouter](https://pub.dev/packages/go_router) with `MaterialApp.router`
 - **Data Modeling**: [Freezed](https://pub.dev/packages/freezed) immutable state objects
 - **Storage**: [shared_preferences](https://pub.dev/packages/shared_preferences) for persistent configuration
 - **File System**: repository-based file access with `filepicker_windows` used only by the Windows picker implementation
@@ -90,6 +95,9 @@ lib/
                 |   `-- song_repository_provider_stub.dart
                 `-- views/
                     `-- main_view.dart
+    `-- navigation/
+        |-- app_router.dart
+        `-- app_routes.dart
 ```
 
 ---

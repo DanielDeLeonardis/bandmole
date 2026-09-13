@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   filepicker_windows: ^3.0.2
   flutter_riverpod: ^3.4.2
+  go_router: ^18.0.1
   shared_preferences: ^2.3.2
   shared_preferences_windows: ^2.4.1
   freezed_annotation: ^3.1.0

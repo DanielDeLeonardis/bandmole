@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Split file access into `SongFilePicker`, `SongFileReader`, and `SongRepositoryImpl`, and moved the Windows picker behind a platform-specific implementation.
   - Refactored `MainView` to call the repository instead of directly orchestrating file dialogs, file reads, and decoding.
   - Extracted the song-loading workflow into `SongLoaderController`, keeping `MainView` focused on UI reactions such as snackbars and navigation.
+  - Standardized app navigation on `GoRouter` with named routes for the main screen, lyrics view, and preferences view.
+  - Hardened the `MainView` and lyrics scroller listener lifecycles by deferring snackbars, navigation, and scroll-state cleanup to post-frame callbacks so they do not act on a deactivated widget tree.
   - Updated `Song` so it no longer depends on `dart:io File`.
   - Added unit coverage for the repository implementation in `test/src/features/song_loader/data/song_repository_impl_test.dart`.
 

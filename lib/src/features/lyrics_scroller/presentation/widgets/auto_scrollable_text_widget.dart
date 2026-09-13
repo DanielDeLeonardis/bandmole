@@ -24,25 +24,64 @@ class _AutoScrollableTextWidgetState
     with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   late final AutoScrollableTextNotifier _textNotifier;
+  ProviderSubscription<AutoScrollableText>? _autoScrollableTextSubscription;
 
   @override
   void initState() {
     super.initState();
     _textNotifier = ref.read(autoScrollableTextProvider.notifier);
+    _autoScrollableTextSubscription = ref.listenManual(
+      autoScrollableTextProvider,
+      (previous, next) {
+        if (previous == null) {
+          return;
+        }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _textNotifier.resetScrollState();
-        _updatePositionState();
-      }
+        final command = next.pendingCommand;
+        if (command != null) {
+          _schedulePostFrame(() {
+            _textNotifier.clearPendingCommand();
+            switch (command) {
+              case ScrollCommand.jumpToStart:
+                _scrollToStart();
+                break;
+              case ScrollCommand.jumpToEnd:
+                _scrollToEnd();
+                break;
+            }
+          });
+        } else if (previous.isScrolling != next.isScrolling) {
+          _scrollToggleAnimate(
+            scrollSpeed: next.scrollSpeed,
+            isScrolling: next.isScrolling,
+          );
+        } else if (next.isScrolling && previous.scrollSpeed != next.scrollSpeed) {
+          _scroll(next.scrollSpeed);
+        }
+      },
+    );
+
+    _schedulePostFrame(() {
+      _textNotifier.resetScrollState();
+      _updatePositionState();
     });
   }
 
   @override
   void dispose() {
-    _textNotifier.setIsScrolling(false);
+    _autoScrollableTextSubscription?.close();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _schedulePostFrame(VoidCallback action) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      action();
+    });
   }
 
   void _updatePositionState() {
@@ -138,52 +177,31 @@ class _AutoScrollableTextWidgetState
   Widget build(BuildContext context) {
     final model = ref.watch(autoScrollableTextProvider);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updatePositionState());
-
-    ref.listen(autoScrollableTextProvider, (previous, next) {
-      if (previous == null) return;
-      if (next.pendingCommand != null) {
-        final command = next.pendingCommand!;
-        _textNotifier.clearPendingCommand();
-        switch (command) {
-          case ScrollCommand.jumpToStart:
-            _scrollToStart();
-            break;
-          case ScrollCommand.jumpToEnd:
-            _scrollToEnd();
-            break;
-        }
-      } else if (previous.isScrolling != next.isScrolling) {
-        _scrollToggleAnimate(
-          scrollSpeed: next.scrollSpeed,
-          isScrolling: next.isScrolling,
-        );
-      } else if (next.isScrolling && previous.scrollSpeed != next.scrollSpeed) {
-        _scroll(next.scrollSpeed);
-      }
-    });
+    _schedulePostFrame(_updatePositionState);
 
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollNotification) {
         if (!_scrollController.hasClients) return false;
 
         if (scrollNotification is ScrollEndNotification) {
-          if (_scrollController.offset >=
-              _scrollController.position.maxScrollExtent) {
-            _textNotifier.setIsScrolling(false);
-          }
+          _schedulePostFrame(() {
+            if (_scrollController.offset >=
+                _scrollController.position.maxScrollExtent) {
+              _textNotifier.setIsScrolling(false);
+            }
+          });
         }
 
         if (scrollNotification is UserScrollNotification &&
             scrollNotification.direction != ScrollDirection.idle) {
           if (model.isScrolling) {
-            _textNotifier.setIsScrolling(false);
+            _schedulePostFrame(() {
+              _textNotifier.setIsScrolling(false);
+            });
           }
         }
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _updatePositionState();
-        });
+        _schedulePostFrame(_updatePositionState);
 
         return true;
       },

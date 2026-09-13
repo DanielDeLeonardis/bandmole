@@ -137,47 +137,39 @@ MainView
       -> SongRepository.loadSong(file)
 ```
 
-`MainView` now reacts to controller state changes with `ref.listen`:
+`MainView` now reacts to controller state changes with a manual `ref.listenManual` subscription:
 - show a snackbar when the repository reports no file selected,
 - show a snackbar when the file is malformed or cannot be loaded,
 - navigate to `SongView` when a song loads successfully.
+
+To keep those reactions lifecycle-safe, the view now registers the listener outside `build()` and defers snackbars and navigation to post-frame callbacks. The lyrics scroller follows the same pattern for scroll commands and state cleanup, which avoids mutating Riverpod state or looking up ancestors from a deactivated context.
 
 ---
 
 ## 6. Recommendation 5: Standardize Declarative Navigation
 
 ### Current Issue
-`main.dart` configures a named route map via `onGenerateRoute`, but views bypass this configuration by creating explicit `MaterialPageRoute` instances.
+`main.dart` previously configured a named route map via `onGenerateRoute`, but views bypassed that router by creating explicit `MaterialPageRoute` instances.
 
 ### Proposed Solution
-Adopt a single, consistent navigation paradigm:
-- Option A: Use `Navigator.pushNamed(context, '/lyrics', arguments: song.content)`.
-- Option B: Adopt `GoRouter` for declarative, type-safe routing, deep-linking, and cleaner parameter passing.
+Implemented in the current codebase.
 
-```dart
-final appRouterProvider = Provider<GoRouter>((ref) {
-  return GoRouter(
-    initialLocation: '/',
-    routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const MainView(),
-      ),
-      GoRoute(
-        path: '/lyrics',
-        builder: (context, state) {
-          final song = state.extra as Song;
-          return SongView(song: song);
-        },
-      ),
-      GoRoute(
-        path: '/preferences',
-        builder: (context, state) => const PreferenceView(),
-      ),
-    ],
-  );
-});
+### Result
+The app now uses `GoRouter` through `MaterialApp.router` with a single named route tree:
+
+```text
+MyApp
+  -> MaterialApp.router
+  -> appRouterProvider
+      -> GoRoute(name: main, path: /)
+      -> GoRoute(name: lyrics, path: /lyrics)
+      -> GoRoute(name: preferences, path: /preferences)
 ```
+
+Navigation now uses declarative named routes consistently:
+- `MainView` opens preferences with `context.pushNamed(AppRoutes.preferences)`.
+- `MainView` opens lyrics with `context.pushNamed(AppRoutes.lyrics, extra: song.text)`.
+- `GoRouter` builds `MainView`, `SongView`, and `PreferenceView` from one central route tree.
 
 ---
 
@@ -197,7 +189,7 @@ As a lyrics reader for musicians, BandMole's domain capabilities can be extended
 | **Completed** | Unified scrolling state into a single Riverpod notifier; removed the stream-based jump path | Low | High | Low |
 | **Completed** | Transitioned to a feature-first directory structure (`lib/src/features/...`) | Medium | High | Medium |
 | **Completed** | Relocated `FilePicker` into the `song_loader` feature data layer | Low | Medium | None |
-| **Phase 1** (High) | Standardize route navigation across `MainView` and `main.dart` | Low | Medium | Low |
+| **Completed** | Standardize route navigation across `MainView` and `main.dart` with `GoRouter` | Low | Medium | Low |
 | **Completed** | Introduce `SongRepository`, abstract platform file picker, and decouple `Song` from `dart:io` | Medium | High | Low |
 | **Completed** | Introduce `SongLoaderController` to remove business logic from `MainView` | Medium | High | Low |
 | **Phase 3** (Long-term) | Add ChordPro parsing and chord transposition domain logic | High | High | Low |
