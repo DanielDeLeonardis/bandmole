@@ -44,7 +44,7 @@ The `AutoScrollableTextNotifier` exposes scroll commands directly, while `AutoSc
 ```
 
 ### Implementation Note
-When `jumpToStart()` is called, the notifier sets `pendingCommand = ScrollCommand.jumpToStart`. The widget's `ref.listen` consumes the command, animates, and calls `notifier.clearPendingCommand()`. This eliminates `AutoScrollableTextService`, `autoScrollableTextEventProvider`, and raw `StreamSubscription` lifecycle management.
+When `jumpToStart()` is called, the notifier sets `pendingCommand = ScrollCommand.jumpToStart`. The widget's manual listener consumes the command, animates, and calls `notifier.clearPendingCommand()`. This eliminates `AutoScrollableTextService`, `autoScrollableTextEventProvider`, and raw `StreamSubscription` lifecycle management.
 
 ---
 
@@ -175,10 +175,16 @@ Navigation now uses declarative named routes consistently:
 
 ## 7. Recommendation 6: Rich Chord & Song Formatting Enhancements
 
-As a lyrics reader for musicians, BandMole's domain capabilities can be extended:
-1. Add a parser for standard ChordPro format.
-2. Allow real-time chord transposition up or down semitones.
-3. Adapt layout on wide desktop screens to display lyrics side-by-side rather than a single tall column.
+### Status
+Implemented in the current codebase.
+
+### Result
+BandMole now parses chord charts into a richer presentation model before rendering them:
+- `SongFormatter` turns plain lyrics or ChordPro-style source text into structured sections, lyric lines, chord markers, and song metadata.
+- `SongTransposeNotifier` lets the view shift chords up or down semitones and reset to concert pitch.
+- `SongTextRenderer` keeps the lyric view responsive by rendering a single-column layout on narrow screens and a two- or three-column layout on wide desktop windows.
+
+This keeps the formatting logic out of the widget tree while still giving musicians a more expressive chord sheet experience.
 
 ---
 
@@ -192,4 +198,4 @@ As a lyrics reader for musicians, BandMole's domain capabilities can be extended
 | **Completed** | Standardize route navigation across `MainView` and `main.dart` with `GoRouter` | Low | Medium | Low |
 | **Completed** | Introduce `SongRepository`, abstract platform file picker, and decouple `Song` from `dart:io` | Medium | High | Low |
 | **Completed** | Introduce `SongLoaderController` to remove business logic from `MainView` | Medium | High | Low |
-| **Phase 3** (Long-term) | Add ChordPro parsing and chord transposition domain logic | High | High | Low |
+| **Completed** | Add ChordPro parsing, chord transposition, and responsive wide-screen song layout | Medium | High | Medium |

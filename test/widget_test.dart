@@ -39,6 +39,9 @@ void main() {
     expect(find.text('Sample song lyrics text line 1\nLine 2'), findsOneWidget);
     expect(find.byIcon(Icons.format_size), findsOneWidget);
     expect(find.byIcon(Icons.text_fields), findsOneWidget);
+    expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+    expect(find.byIcon(Icons.remove_circle_outline), findsOneWidget);
+    expect(find.byIcon(Icons.restart_alt), findsOneWidget);
   });
 
   testWidgets('SongView allows consecutive font size and scroll speed adjustments',
@@ -53,48 +56,50 @@ void main() {
     await tester.pumpAndSettle();
 
     // Initial values: font size 18, scroll speed 5
-    expect(find.text('18'), findsOneWidget);
-    expect(find.text('5'), findsOneWidget);
+    expect(find.text('18', skipOffstage: false), findsOneWidget);
+    expect(find.text('5', skipOffstage: false), findsOneWidget);
 
     // Tap increase font size multiple times
     await tester.tap(find.byIcon(Icons.format_size));
     await tester.pumpAndSettle();
-    expect(find.text('19'), findsOneWidget);
+    expect(find.text('19', skipOffstage: false), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.format_size));
     await tester.pumpAndSettle();
-    expect(find.text('20'), findsOneWidget);
+    expect(find.text('20', skipOffstage: false), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.format_size));
     await tester.pumpAndSettle();
-    expect(find.text('21'), findsOneWidget);
+    expect(find.text('21', skipOffstage: false), findsOneWidget);
 
     // Tap decrease font size multiple times
     await tester.tap(find.byIcon(Icons.text_fields));
     await tester.pumpAndSettle();
-    expect(find.text('20'), findsOneWidget);
+    expect(find.text('20', skipOffstage: false), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.text_fields));
     await tester.pumpAndSettle();
-    expect(find.text('19'), findsOneWidget);
+    expect(find.text('19', skipOffstage: false), findsOneWidget);
 
     // Tap increase scroll speed multiple times
+    await tester.ensureVisible(find.byIcon(Icons.fast_forward));
     await tester.tap(find.byIcon(Icons.fast_forward));
     await tester.pumpAndSettle();
-    expect(find.text('6'), findsOneWidget);
+    expect(find.text('6', skipOffstage: false), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.fast_forward));
     await tester.pumpAndSettle();
-    expect(find.text('7'), findsOneWidget);
+    expect(find.text('7', skipOffstage: false), findsOneWidget);
 
     // Tap decrease scroll speed multiple times
+    await tester.ensureVisible(find.byIcon(Icons.fast_rewind));
     await tester.tap(find.byIcon(Icons.fast_rewind));
     await tester.pumpAndSettle();
-    expect(find.text('6'), findsOneWidget);
+    expect(find.text('6', skipOffstage: false), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.fast_rewind));
     await tester.pumpAndSettle();
-    expect(find.text('5'), findsOneWidget);
+    expect(find.text('5', skipOffstage: false), findsOneWidget);
   });
 
   testWidgets('SongView start and stop scrolling toggle',
@@ -190,6 +195,34 @@ void main() {
     // Scrolling should be stopped (play_arrow icon) and at start
     expect(find.byIcon(Icons.play_arrow), findsOneWidget);
     expect(tester.widget<ElevatedButton>(goToStartFinder).onPressed, isNull);
+  });
+
+  testWidgets('SongView transposes chord charts through the formatter',
+      (WidgetTester tester) async {
+    const chordSong = '''
+{title: Transpose Example}
+{start_of_verse}
+[Bb]Hello [F]world
+''';
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: SongView(text: chordSong),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Transpose Example'), findsOneWidget);
+    expect(find.text('Bb'), findsOneWidget);
+    expect(find.text('B'), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.add_circle_outline));
+    await tester.pumpAndSettle();
+
+    expect(find.text('B'), findsOneWidget);
+    expect(find.text('Bb'), findsNothing);
   });
 
   testWidgets('PreferenceView displays theme choices',

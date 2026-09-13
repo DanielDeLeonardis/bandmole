@@ -2,6 +2,8 @@ import 'package:bandmole/src/features/lyrics_scroller/domain/auto_scrollable_tex
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AutoScrollableTextNotifier extends Notifier<AutoScrollableText> {
+  static const double _boundaryTolerance = 1.0;
+
   @override
   AutoScrollableText build() => const AutoScrollableText(
         isScrolling: false,
@@ -29,8 +31,10 @@ class AutoScrollableTextNotifier extends Notifier<AutoScrollableText> {
     required double screenOffset,
     required double screenMaxExtent,
   }) {
-    final isAtStart = screenOffset <= 0.0;
-    final isAtEnd = screenOffset >= screenMaxExtent;
+    final isAtStart = screenOffset <= _boundaryTolerance;
+    final isAtEnd = screenMaxExtent <= 0.0
+        ? true
+        : screenOffset >= (screenMaxExtent - _boundaryTolerance);
 
     if (state.isAtStart != isAtStart || state.isAtEnd != isAtEnd) {
       state = state.copyWith(

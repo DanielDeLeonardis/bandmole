@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Song Loading / Repository Pattern**:
   - Introduced `SongRepository` as the domain boundary for file picking and file loading, with `SongFile` used as a platform-neutral file handle.
   - Split file access into `SongFilePicker`, `SongFileReader`, and `SongRepositoryImpl`, and moved the Windows picker behind a platform-specific implementation.
+  - Expanded the Windows file picker to accept common ChordPro extensions (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`) alongside plain text files, with `.cho` as the default extension.
   - Refactored `MainView` to call the repository instead of directly orchestrating file dialogs, file reads, and decoding.
   - Extracted the song-loading workflow into `SongLoaderController`, keeping `MainView` focused on UI reactions such as snackbars and navigation.
   - Standardized app navigation on `GoRouter` with named routes for the main screen, lyrics view, and preferences view.
@@ -26,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Unified jump navigation and scroll state into a single `AutoScrollableTextNotifier` flow by adding `pendingCommand` to the `AutoScrollableText` model and routing "Go to start" / "Go to end" through the same Riverpod state used for play, stop, font size, and speed controls.
   - Removed the separate event-stream style jump path from the architecture docs and aligned the README project structure with the current provider/model layout.
   - Kept the existing auto-scroll boundary and toggle behavior covered by the unit and widget tests in `test/auto_scrollable_text_test.dart` and `test/widget_test.dart`.
+
+- **Rich Chord & Song Formatting**:
+  - Added a pure Dart `SongFormatter` that parses ChordPro-style chord charts, metadata, and section markers into renderable song sections.
+  - Introduced chord transposition controls in `SongView`, with a `SongTransposeNotifier` to shift the displayed key up or down semitones.
+  - Updated the lyric renderer to preserve plain-text songs while rendering chord charts in rich chord-over-lyric rows, with a responsive two- or three-column layout on wide desktop windows.
+  - Added unit coverage for chord parsing and transposition in `test/src/features/lyrics_scroller/domain/song_formatting_test.dart`.
 
 ## [1.0.3] - 2026-09-11
 

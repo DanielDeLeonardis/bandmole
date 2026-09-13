@@ -1,7 +1,10 @@
 import 'dart:math';
 
 import 'package:bandmole/src/features/lyrics_scroller/domain/auto_scrollable_text.dart';
+import 'package:bandmole/src/features/lyrics_scroller/domain/song_formatting.dart';
 import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/auto_scrollable_text_provider.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/song_transpose_provider.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/widgets/song_text_renderer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -176,6 +179,11 @@ class _AutoScrollableTextWidgetState
   @override
   Widget build(BuildContext context) {
     final model = ref.watch(autoScrollableTextProvider);
+    final transposeSemitones = ref.watch(songTransposeProvider);
+    final song = SongFormatter.parse(
+      widget.text,
+      transposeSemitones: transposeSemitones,
+    );
 
     _schedulePostFrame(_updatePositionState);
 
@@ -209,13 +217,9 @@ class _AutoScrollableTextWidgetState
         padding: const EdgeInsets.all(12.0),
         child: SingleChildScrollView(
           controller: _scrollController,
-          child: Text(
-            widget.text,
-            maxLines: 1000,
-            style: TextStyle(
-              fontSize: model.textFontSize,
-              fontFamily: 'Consolas',
-            ),
+          child: SongTextRenderer(
+            song: song,
+            fontSize: model.textFontSize,
           ),
         ),
       ),

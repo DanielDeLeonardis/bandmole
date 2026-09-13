@@ -13,14 +13,17 @@ BandMole is a Flutter application designed for musicians and performers to displ
   - Play / Stop toggle with immediate halt on touch gestures or stop button.
   - Quick navigation controls: **Go to Start** and **Go to End** driven by a unified scroll-command state in Riverpod.
   - Automatic button state updates, disabling transport buttons when already at the start or end, or when content fits within the screen.
+  - Responsive song rendering that splits chord charts into side-by-side columns on wide desktop windows.
 
 - **Typography & Readability**:
   - Monospaced typography (`Consolas`) to maintain accurate alignment of chords and lyrics.
   - Live font size adjustments, bounded with minimum size constraints, with instant visual feedback.
+  - ChordPro-style chord markers are rendered as rich chord-and-lyric lines, with optional transposition controls.
 
 - **Song File Management**:
   - Repository-based song loading flow that separates the UI from file access and decoding concerns.
   - Platform-specific file selection behind a repository abstraction, with UTF-8 encoding validation and malformed character handling.
+  - Windows picker accepts common ChordPro extensions (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`) plus plain text files.
 
 - **Theme Preferences**:
   - Customizable color themes, including dark themes optimized for low-light stage performance.
@@ -57,14 +60,17 @@ lib/
     `-- features/
         |-- lyrics_scroller/
         |   |-- domain/
-        |   |   `-- auto_scrollable_text.dart
+        |   |   |-- auto_scrollable_text.dart
+        |   |   `-- song_formatting.dart
         |   `-- presentation/
         |       |-- providers/
-        |       |   `-- auto_scrollable_text_provider.dart
+        |       |   |-- auto_scrollable_text_provider.dart
+        |       |   `-- song_transpose_provider.dart
         |       |-- views/
         |       |   `-- song_view.dart
         |       `-- widgets/
-        |           `-- auto_scrollable_text_widget.dart
+        |           |-- auto_scrollable_text_widget.dart
+        |           `-- song_text_renderer.dart
         |-- preferences/
         |   |-- data/
         |   |   `-- preference_service.dart
