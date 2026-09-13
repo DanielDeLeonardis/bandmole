@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Introduced `SongRepository` as the domain boundary for file picking and file loading, with `SongFile` used as a platform-neutral file handle.
   - Split file access into `SongFilePicker`, `SongFileReader`, and `SongRepositoryImpl`, and moved the Windows picker behind a platform-specific implementation.
   - Refactored `MainView` to call the repository instead of directly orchestrating file dialogs, file reads, and decoding.
+  - Extracted the song-loading workflow into `SongLoaderController`, keeping `MainView` focused on UI reactions such as snackbars and navigation.
   - Updated `Song` so it no longer depends on `dart:io File`.
   - Added unit coverage for the repository implementation in `test/src/features/song_loader/data/song_repository_impl_test.dart`.
 

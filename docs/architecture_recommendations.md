@@ -92,10 +92,11 @@ Before the refactor, the file picker hardcoded a dependency on `filepicker_windo
 Implemented in the current codebase.
 
 ### Result
-The song-loading flow now goes through a repository boundary instead of calling platform APIs directly from the view layer:
+The song-loading flow now goes through a repository boundary and a presentation controller instead of calling platform APIs directly from the view layer:
 
 ```text
 MainView
+  -> SongLoaderController
   -> SongRepository
       -> SongFilePicker
       -> SongFileReader
@@ -110,7 +111,8 @@ The data layer now provides platform-specific implementations behind the reposit
 - `UnsupportedSongFilePicker` allows non-Windows builds to compile and fail gracefully at runtime.
 - `IoSongFileReader` reads the selected file bytes for decoding.
 
-`MainView` now only reacts to repository outcomes:
+`MainView` now only reacts to controller outcomes:
+- dispatches the button tap to `SongLoaderController`,
 - show a snackbar when no file is selected,
 - show a snackbar when the file has encoding issues,
 - navigate to `SongView` when the song text is loaded successfully.
@@ -120,30 +122,25 @@ The data layer now provides platform-specific implementations behind the reposit
 ## 5. Recommendation 4: Extract Presentation Logic to ViewModels / Controllers
 
 ### Current Issue
-`MainView` contains inline logic for file picking, error handling, snackbars, and navigation.
+`MainView` previously contained inline logic for file picking, error handling, snackbars, and navigation.
 
 ### Proposed Solution
-Extract this workflow into an `AsyncNotifier` or ViewModel that exposes state representing `idle`, `loading`, `success`, or `error`:
+Implemented in the current codebase.
 
-```dart
-@riverpod
-class SongLoaderController extends _$SongLoaderController {
-  @override
-  FutureOr<Song?> build() => null;
+### Result
+The song-loading workflow now lives in `SongLoaderController` as an `AsyncNotifier<Song?>`:
 
-  Future<void> pickAndLoadSong() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      final repository = ref.read(songRepositoryProvider);
-      final file = await repository.pickSongFile();
-      if (file == null) return null;
-      return repository.loadSong(file);
-    });
-  }
-}
+```text
+MainView
+  -> SongLoaderController.pickAndLoadSong()
+      -> SongRepository.pickSongFile()
+      -> SongRepository.loadSong(file)
 ```
 
-`MainView` would call `ref.read(songLoaderControllerProvider.notifier).pickAndLoadSong()` and use `ref.listen` to handle snackbars or page transitions when `state.hasError` or `state.value != null`.
+`MainView` now reacts to controller state changes with `ref.listen`:
+- show a snackbar when the repository reports no file selected,
+- show a snackbar when the file is malformed or cannot be loaded,
+- navigate to `SongView` when a song loads successfully.
 
 ---
 
@@ -202,5 +199,5 @@ As a lyrics reader for musicians, BandMole's domain capabilities can be extended
 | **Completed** | Relocated `FilePicker` into the `song_loader` feature data layer | Low | Medium | None |
 | **Phase 1** (High) | Standardize route navigation across `MainView` and `main.dart` | Low | Medium | Low |
 | **Completed** | Introduce `SongRepository`, abstract platform file picker, and decouple `Song` from `dart:io` | Medium | High | Low |
-| **Phase 2** (Medium) | Introduce `SongLoaderController` to remove business logic from `MainView` | Medium | High | Low |
+| **Completed** | Introduce `SongLoaderController` to remove business logic from `MainView` | Medium | High | Low |
 | **Phase 3** (Long-term) | Add ChordPro parsing and chord transposition domain logic | High | High | Low |

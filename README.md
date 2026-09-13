@@ -84,6 +84,7 @@ lib/
             |   `-- song_repository.dart
             `-- presentation/
                 |-- providers/
+                |   |-- song_loader_controller.dart
                 |   |-- song_repository_provider.dart
                 |   |-- song_repository_provider_io.dart
                 |   `-- song_repository_provider_stub.dart
