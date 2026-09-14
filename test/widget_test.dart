@@ -44,6 +44,34 @@ void main() {
     expect(find.byIcon(Icons.restart_alt), findsOneWidget);
   });
 
+  testWidgets('SongView disables transpose controls when unsupported',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: SongView(
+            text: 'Sample song lyrics text line 1\nLine 2',
+            canTranspose: false,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final transposeDownButton =
+        find.widgetWithIcon(ElevatedButton, Icons.remove_circle_outline);
+    final transposeResetButton = find.widgetWithIcon(
+      ElevatedButton,
+      Icons.restart_alt,
+    );
+    final transposeUpButton =
+        find.widgetWithIcon(ElevatedButton, Icons.add_circle_outline);
+
+    expect(tester.widget<ElevatedButton>(transposeDownButton).onPressed, isNull);
+    expect(tester.widget<ElevatedButton>(transposeResetButton).onPressed, isNull);
+    expect(tester.widget<ElevatedButton>(transposeUpButton).onPressed, isNull);
+  });
+
   testWidgets('SongView allows consecutive font size and scroll speed adjustments',
       (WidgetTester tester) async {
     await tester.pumpWidget(

@@ -104,6 +104,7 @@ MainView
 
 The domain layer now owns a platform-neutral file model:
 - `SongFile` stores the selected file path without exposing `dart:io File`.
+- `SongFile` also exposes extension-based ChordPro detection so the UI can gate transposition behavior on the loaded source type.
 - `SongRepository` exposes `pickSongFile()` and `loadSong(SongFile)` as the only public file-access operations.
 
 The data layer now provides platform-specific implementations behind the repository:
@@ -115,7 +116,7 @@ The data layer now provides platform-specific implementations behind the reposit
 - dispatches the button tap to `SongLoaderController`,
 - show a snackbar when no file is selected,
 - show a snackbar when the file has encoding issues,
-- navigate to `SongView` when the song text is loaded successfully.
+- reset transpose state for plain-text songs and navigate to `SongView` when the song text is loaded successfully.
 
 ---
 
@@ -143,6 +144,7 @@ MainView
 - navigate to `SongView` when a song loads successfully.
 
 To keep those reactions lifecycle-safe, the view now registers the listener outside `build()` and defers snackbars and navigation to post-frame callbacks. The lyrics scroller follows the same pattern for scroll commands and state cleanup, which avoids mutating Riverpod state or looking up ancestors from a deactivated context.
+The lyrics view also disables transpose controls for plain-text files and resets the transpose offset to zero when a non-ChordPro song is opened.
 
 ---
 
@@ -168,7 +170,7 @@ MyApp
 
 Navigation now uses declarative named routes consistently:
 - `MainView` opens preferences with `context.pushNamed(AppRoutes.preferences)`.
-- `MainView` opens lyrics with `context.pushNamed(AppRoutes.lyrics, extra: song.text)`.
+- `MainView` opens lyrics with `context.pushNamed(AppRoutes.lyrics, extra: song)`.
 - `GoRouter` builds `MainView`, `SongView`, and `PreferenceView` from one central route tree.
 
 ---
@@ -181,7 +183,7 @@ Implemented in the current codebase.
 ### Result
 BandMole now parses chord charts into a richer presentation model before rendering them:
 - `SongFormatter` turns plain lyrics or ChordPro-style source text into structured sections, lyric lines, chord markers, and song metadata.
-- `SongTransposeNotifier` lets the view shift chords up or down semitones and reset to concert pitch.
+- `SongTransposeNotifier` lets the view shift chords up or down semitones and reset to concert pitch, while `MainView` and `SongView` keep that control disabled for plain-text songs.
 - `SongTextRenderer` keeps the lyric view responsive by rendering a single-column layout on narrow screens and a two- or three-column layout on wide desktop windows.
 
 This keeps the formatting logic out of the widget tree while still giving musicians a more expressive chord sheet experience.

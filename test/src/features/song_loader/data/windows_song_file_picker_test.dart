@@ -2,13 +2,15 @@ import 'package:bandmole/src/features/song_loader/data/windows_song_file_picker.
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Windows song picker supports common ChordPro extensions', () {
-    expect(chordProSongFileDefaultExtension, 'cho');
-    expect(chordProSongFileFilters, containsPair('ChordPro Song (*.cho)', '*.cho'));
-    expect(chordProSongFileFilters, containsPair('ChordPro Song (*.crd)', '*.crd'));
-    expect(chordProSongFileFilters, containsPair('ChordPro Song (*.chopro)', '*.chopro'));
-    expect(chordProSongFileFilters, containsPair('ChordPro Song (*.chordpro)', '*.chordpro'));
-    expect(chordProSongFileFilters, containsPair('ChordPro Song (*.pro)', '*.pro'));
-    expect(chordProSongFileFilters, containsPair('Text Document (*.txt)', '*.txt'));
+  test('Windows song picker shows a single combined filter for allowed files',
+      () {
+    expect(chordProSongFileFilters, hasLength(1));
+    expect(
+      chordProSongFileFilters,
+      containsPair(
+        'Song Files',
+        '*.cho;*.crd;*.chopro;*.chordpro;*.pro;*.txt',
+      ),
+    );
   });
 }

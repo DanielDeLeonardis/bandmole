@@ -18,12 +18,12 @@ BandMole is a Flutter application designed for musicians and performers to displ
 - **Typography & Readability**:
   - Monospaced typography (`Consolas`) to maintain accurate alignment of chords and lyrics.
   - Live font size adjustments, bounded with minimum size constraints, with instant visual feedback.
-  - ChordPro-style chord markers are rendered as rich chord-and-lyric lines, with optional transposition controls.
+  - ChordPro-style chord markers are rendered as rich chord-and-lyric lines, with transposition controls enabled only for ChordPro files.
 
 - **Song File Management**:
   - Repository-based song loading flow that separates the UI from file access and decoding concerns.
   - Platform-specific file selection behind a repository abstraction, with UTF-8 encoding validation and malformed character handling.
-  - Windows picker accepts common ChordPro extensions (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`) plus plain text files.
+  - Windows picker shows a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) instead of separate file-type entries.
 
 - **Theme Preferences**:
   - Customizable color themes, including dark themes optimized for low-light stage performance.

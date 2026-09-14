@@ -1,3 +1,4 @@
+import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/song_transpose_provider.dart';
 import 'package:bandmole/src/features/song_loader/presentation/providers/song_loader_controller.dart';
 import 'package:bandmole/src/features/song_loader/domain/song.dart';
 import 'package:bandmole/src/navigation/app_routes.dart';
@@ -69,6 +70,10 @@ class _MainViewState extends ConsumerState<MainView> {
           return;
         }
 
+        if (!song.canTranspose) {
+          ref.read(songTransposeProvider.notifier).resetTranspose();
+        }
+
         if (song.isMalformed) {
           _schedulePostFrame(() {
             ScaffoldMessenger.maybeOf(context)?.showSnackBar(
@@ -84,7 +89,7 @@ class _MainViewState extends ConsumerState<MainView> {
         _schedulePostFrame(() {
           context.pushNamed(
             AppRoutes.lyrics,
-            extra: songText,
+            extra: song,
           );
         });
       },

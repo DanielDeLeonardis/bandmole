@@ -15,12 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Song Loading / Repository Pattern**:
   - Introduced `SongRepository` as the domain boundary for file picking and file loading, with `SongFile` used as a platform-neutral file handle.
   - Split file access into `SongFilePicker`, `SongFileReader`, and `SongRepositoryImpl`, and moved the Windows picker behind a platform-specific implementation.
-  - Expanded the Windows file picker to accept common ChordPro extensions (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`) alongside plain text files, with `.cho` as the default extension.
+  - Updated the Windows file picker to present a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) instead of separate file-type entries.
   - Refactored `MainView` to call the repository instead of directly orchestrating file dialogs, file reads, and decoding.
   - Extracted the song-loading workflow into `SongLoaderController`, keeping `MainView` focused on UI reactions such as snackbars and navigation.
   - Standardized app navigation on `GoRouter` with named routes for the main screen, lyrics view, and preferences view.
   - Hardened the `MainView` and lyrics scroller listener lifecycles by deferring snackbars, navigation, and scroll-state cleanup to post-frame callbacks so they do not act on a deactivated widget tree.
-  - Updated `Song` so it no longer depends on `dart:io File`.
+  - Updated `Song` so it no longer depends on `dart:io File`, and added file-type-aware transposition gating so plain text songs keep transpose controls disabled and reset to concert pitch when opened.
   - Added unit coverage for the repository implementation in `test/src/features/song_loader/data/song_repository_impl_test.dart`.
 
 - **Auto Scrollable Text Module (`auto_scrollable_text`)**:
@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Rich Chord & Song Formatting**:
   - Added a pure Dart `SongFormatter` that parses ChordPro-style chord charts, metadata, and section markers into renderable song sections.
-  - Introduced chord transposition controls in `SongView`, with a `SongTransposeNotifier` to shift the displayed key up or down semitones.
+  - Introduced chord transposition controls in `SongView`, with a `SongTransposeNotifier` to shift the displayed key up or down semitones. Those controls are enabled only for ChordPro songs, and plain text songs automatically reset the transpose offset to zero when opened.
   - Updated the lyric renderer to preserve plain-text songs while rendering chord charts in rich chord-over-lyric rows, with a responsive two- or three-column layout on wide desktop windows.
   - Added unit coverage for chord parsing and transposition in `test/src/features/lyrics_scroller/domain/song_formatting_test.dart`.
 

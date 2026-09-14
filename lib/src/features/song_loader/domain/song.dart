@@ -10,4 +10,6 @@ class Song {
     required this.text,
     required this.isMalformed,
   });
+
+  bool get canTranspose => file.isChordPro;
 }

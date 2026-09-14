@@ -56,12 +56,13 @@ Domain Models
   - Hosts the file picker entry point (`Open song`) and navigation action to preferences.
   - Dispatches song loading to `SongLoaderController`, then handles success/error outcomes via a lifecycle-safe manual listener that defers snackbars and navigation to post-frame callbacks.
   - Uses declarative named routes via `context.pushNamed()` to transition to `SongView` and `PreferenceView`.
+  - Resets transpose state before opening non-ChordPro songs so the lyrics view starts at concert pitch for plain text files.
 
 - **`SongView` (`lib/src/features/lyrics_scroller/presentation/views/song_view.dart`)**
   - The primary performance display.
   - Accepts raw song lyrics text via its constructor.
   - Wraps `AutoScrollableTextWidget` and provides floating action buttons for font size adjustment, scroll speed, start/stop scrolling, and boundary jumps (`Go to start`, `Go to end`).
-  - Exposes chord transposition controls and forwards the active semitone offset into the lyric formatter.
+  - Exposes chord transposition controls only for ChordPro songs and forwards the active semitone offset into the lyric formatter.
   - Interacts with state through a single Riverpod notifier:
     - Reads `autoScrollableTextProvider` for font size, speed, scroll toggle, and boundary flags.
     - Dispatches all scroll-related actions via `autoScrollableTextProvider.notifier`.
@@ -132,7 +133,7 @@ State management is implemented using Riverpod:
   - Delegates file selection to a `SongFilePicker` and file-byte reading to a `SongFileReader`.
   - Returns `Song` models that carry a platform-neutral `SongFile` rather than a raw `dart:io File`.
 - **`windows_song_file_picker.dart`**
-  - Configures the Windows file dialog to accept common ChordPro extensions (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`) plus `.txt`, with `.cho` as the default extension.
+  - Configures the Windows file dialog with a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) so the dialog shows matching files without forcing the user to choose a specific type.
 
 - **`preference_service.dart`**
   - Wraps `SharedPreferences` to load and save `themeData` by enum string representation.
@@ -146,9 +147,11 @@ The former auto-scroll stream service is no longer part of the current implement
 - **`Song` (`song.dart`)**
   - Represents a loaded song file.
   - Contains `file` (`SongFile`), `text` (`String?`), and `isMalformed` (`bool`).
+  - Exposes `canTranspose` so the UI can distinguish ChordPro songs from plain text songs.
 
 - **`SongFile` (`song_file.dart`)**
   - A platform-neutral handle for a selected song file path.
+  - Provides extension-based ChordPro detection used to decide whether transpose controls should be enabled.
 
 - **`SongRepository` (`song_repository.dart`)**
   - Domain-level contract for picking and loading song files.
@@ -179,7 +182,7 @@ The former auto-scroll stream service is no longer part of the current implement
   -> Decode bytes as UTF-8
      - Success: isMalformed = false
      - Failure: fallback with allowMalformed = true, isMalformed = true
-  -> MainView calls context.pushNamed(AppRoutes.lyrics, extra: song.text)
+  -> MainView resets transpose state for plain-text songs, then calls context.pushNamed(AppRoutes.lyrics, extra: song)
 ```
 
 ### 4.2 Auto-Scroll Execution & Animation Flow
@@ -219,7 +222,7 @@ The former auto-scroll stream service is no longer part of the current implement
 4. **Presentation Controller Separation**: `SongLoaderController` keeps the file-picking workflow out of `MainView`, which leaves the view focused on user interaction and navigation.
 5. **Declarative Routing**: `MyApp` now uses `MaterialApp.router` with a centralized `GoRouter`, which standardizes route handling across the app and makes future deep-link support easier to add.
 6. **Repository-Based File Access**: Song loading now flows through `SongRepository`, `SongFilePicker`, and `SongFileReader`, which keeps file selection and decoding out of the presentation layer and makes the data boundary easier to test.
-7. **Rich Song Presentation**: The formatter/parser layer now understands ChordPro-style markup, transposition, and responsive two- or three-column song layouts for wide screens.
+7. **Rich Song Presentation**: The formatter/parser layer now understands ChordPro-style markup, transposition, and responsive two- or three-column song layouts for wide screens, while plain-text songs keep transpose controls disabled and reset to concert pitch.
 8. **Feature-First Layout**: Related code now lives together under `lib/src/features/`, which makes the three app areas easier to navigate.
 9. **Defensive Decoding**: File ingestion accounts for character encoding anomalies, preventing crashes on non-UTF-8 song files.
 10. **High Automated Test Coverage**: Unit tests cover provider mutations and boundary conditions; widget tests validate multi-step interactive workflows, routing, scrolling actions, and chord transposition.

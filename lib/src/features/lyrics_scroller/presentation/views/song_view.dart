@@ -8,10 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SongView extends ConsumerWidget {
   final String text;
+  final bool canTranspose;
 
   const SongView({
     super.key,
     required this.text,
+    this.canTranspose = true,
   });
 
   @override
@@ -67,6 +69,7 @@ class SongView extends ConsumerWidget {
       floatingActionButton: _SongControlsRail(
         textFontSize: model.textFontSize.toInt(),
         transposeSemitones: transposeSemitones,
+        canTranspose: canTranspose,
         scrollSpeed: model.scrollSpeed,
         isAtEnd: model.isAtEnd,
         isAtStart: model.isAtStart,
@@ -90,6 +93,7 @@ class _SongControlsRail extends StatelessWidget {
   const _SongControlsRail({
     required this.textFontSize,
     required this.transposeSemitones,
+    required this.canTranspose,
     required this.scrollSpeed,
     required this.isAtEnd,
     required this.isAtStart,
@@ -108,6 +112,7 @@ class _SongControlsRail extends StatelessWidget {
 
   final int textFontSize;
   final int transposeSemitones;
+  final bool canTranspose;
   final int scrollSpeed;
   final bool isAtEnd;
   final bool isAtStart;
@@ -158,7 +163,7 @@ class _SongControlsRail extends StatelessWidget {
                   const SizedBox(height: 24),
                   ToolTipRaisedButton(
                     tip: 'Transpose down one semitone',
-                    onPressed: onTransposeDown,
+                    onPressed: canTranspose ? onTransposeDown : null,
                     icon: const Icon(Icons.remove_circle_outline),
                   ),
                   const SizedBox(height: 5),
@@ -171,13 +176,15 @@ class _SongControlsRail extends StatelessWidget {
                   const SizedBox(height: 5),
                   ToolTipRaisedButton(
                     tip: 'Reset transposition',
-                    onPressed: transposeSemitones != 0 ? onResetTranspose : null,
+                    onPressed: canTranspose && transposeSemitones != 0
+                        ? onResetTranspose
+                        : null,
                     icon: const Icon(Icons.restart_alt),
                   ),
                   const SizedBox(height: 5),
                   ToolTipRaisedButton(
                     tip: 'Transpose up one semitone',
-                    onPressed: onTransposeUp,
+                    onPressed: canTranspose ? onTransposeUp : null,
                     icon: const Icon(Icons.add_circle_outline),
                   ),
                   const SizedBox(height: 24),
