@@ -28,7 +28,8 @@ Presentation Layer
 
 Navigation & Routing
   - appRouterProvider (GoRouter)
-  - Named routes for main, lyrics, and preferences
+  - Nested named routes for main, lyrics, and preferences
+  - Lyrics route guarded by required `Song` payload
 
 State Management & Logic
   - AutoScrollableTextNotifier (Notifier<AutoScrollableText>)
@@ -54,7 +55,7 @@ Domain Models
 - **`MainView` (`lib/src/features/song_loader/presentation/views/main_view.dart`)**
   - The initial landing screen.
   - Hosts the file picker entry point (`Open song`) and navigation action to preferences.
-  - Dispatches song loading to `SongLoaderController`, then handles success/error outcomes via a lifecycle-safe manual listener that defers snackbars and navigation to post-frame callbacks.
+  - Dispatches song loading to `SongLoaderController`, while `SongLoaderEffectsListener` handles success/error outcomes via a lifecycle-safe listener that defers snackbars and navigation to post-frame callbacks.
   - Uses declarative named routes via `context.pushNamed()` to transition to `SongView` and `PreferenceView`.
   - Resets transpose state before opening non-ChordPro songs so the lyrics view starts at concert pitch for plain text files.
 
@@ -119,7 +120,7 @@ State management is implemented using Riverpod:
 4. **`SongLoaderController` (`song_loader_controller.dart`)**
    - Manages the song-loading workflow as an `AsyncNotifier<Song?>`.
    - Dispatches repository calls for song file selection and loading.
-   - Exposes loading, success, and error states to `MainView`, which reacts with snackbars and navigation after the current frame has settled.
+   - Exposes loading, success, and error states to `SongLoaderEffectsListener`, which reacts with snackbars and navigation after the current frame has settled.
 
 ---
 
@@ -182,7 +183,8 @@ The former auto-scroll stream service is no longer part of the current implement
   -> Decode bytes as UTF-8
      - Success: isMalformed = false
      - Failure: fallback with allowMalformed = true, isMalformed = true
-  -> MainView resets transpose state for plain-text songs, then calls context.pushNamed(AppRoutes.lyrics, extra: song)
+  -> SongLoaderEffectsListener resets transpose state for plain-text songs
+  -> SongLoaderEffectsListener calls context.pushNamed(AppRoutes.lyrics, extra: song)
 ```
 
 ### 4.2 Auto-Scroll Execution & Animation Flow
@@ -232,7 +234,7 @@ The former auto-scroll stream service is no longer part of the current implement
 ## 6. Architectural Weaknesses & Technical Debt
 
 1. **Presentation Side Effects**
-   - `MainView` still performs snackbar presentation and route triggering in response to controller state, which is acceptable for UI concerns but keeps some orchestration inline.
+   - `SongLoaderEffectsListener` still performs snackbar presentation and route triggering in response to controller state. This keeps the UI reactions in the presentation layer, but the orchestration is now isolated from the page layout.
 
 2. **Flat Route Tree**
-   - The router is centralized, but the app currently uses a simple top-level route list; nested shells or route guards are not needed yet.
+   - The router is now grouped beneath the main route with a basic payload guard on `lyrics`, but the app still does not need deeper shells or complex route authorization yet.

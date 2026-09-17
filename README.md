@@ -24,13 +24,15 @@ BandMole is a Flutter application designed for musicians and performers to displ
   - Repository-based song loading flow that separates the UI from file access and decoding concerns.
   - Platform-specific file selection behind a repository abstraction, with UTF-8 encoding validation and malformed character handling.
   - Windows picker shows a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) instead of separate file-type entries.
+  - `MainView` delegates snackbars and navigation to a dedicated `SongLoaderEffectsListener`, keeping the page layout focused on composition.
 
 - **Theme Preferences**:
   - Customizable color themes, including dark themes optimized for low-light stage performance.
   - Asynchronous theme persistence via local preferences.
 
 - **Declarative Navigation**:
-  - Centralized route handling with `GoRouter` and named routes for the main screen, lyrics view, and preferences view.
+  - Centralized route handling with `GoRouter` and nested named routes for the main screen, lyrics view, and preferences view.
+  - The lyrics route expects a `Song` payload and redirects back home if it is opened without one.
   - Song and preference transitions are handled through `MaterialApp.router` instead of imperative page pushes.
 
 ---
@@ -99,6 +101,8 @@ lib/
                 |   |-- song_repository_provider.dart
                 |   |-- song_repository_provider_io.dart
                 |   `-- song_repository_provider_stub.dart
+                |-- widgets/
+                |   `-- song_loader_effects_listener.dart
                 `-- views/
                     `-- main_view.dart
     `-- navigation/

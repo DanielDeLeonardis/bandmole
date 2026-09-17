@@ -14,22 +14,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: AppRoutes.main,
         path: '/',
         builder: (context, state) => const MainView(),
-      ),
-      GoRoute(
-        name: AppRoutes.lyrics,
-        path: '/lyrics',
-        builder: (context, state) {
-          final song = state.extra as Song?;
-          return SongView(
-            text: song?.text ?? '',
-            canTranspose: song?.canTranspose ?? false,
-          );
-        },
-      ),
-      GoRoute(
-        name: AppRoutes.preferences,
-        path: '/preferences',
-        builder: (context, state) => const PreferenceView(),
+        routes: [
+          GoRoute(
+            name: AppRoutes.lyrics,
+            path: 'lyrics',
+            redirect: (context, state) {
+              if (state.extra is Song) {
+                return null;
+              }
+
+              return '/';
+            },
+            builder: (context, state) {
+              final song = state.extra as Song;
+              return SongView(
+                text: song.text ?? '',
+                canTranspose: song.canTranspose,
+              );
+            },
+          ),
+          GoRoute(
+            name: AppRoutes.preferences,
+            path: 'preferences',
+            builder: (context, state) => const PreferenceView(),
+          ),
+        ],
       ),
     ],
   );

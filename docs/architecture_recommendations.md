@@ -138,12 +138,12 @@ MainView
       -> SongRepository.loadSong(file)
 ```
 
-`MainView` now reacts to controller state changes with a manual `ref.listenManual` subscription:
+`MainView` now stays focused on layout while a dedicated `SongLoaderEffectsListener` reacts to controller state changes:
 - show a snackbar when the repository reports no file selected,
 - show a snackbar when the file is malformed or cannot be loaded,
 - navigate to `SongView` when a song loads successfully.
 
-To keep those reactions lifecycle-safe, the view now registers the listener outside `build()` and defers snackbars and navigation to post-frame callbacks. The lyrics scroller follows the same pattern for scroll commands and state cleanup, which avoids mutating Riverpod state or looking up ancestors from a deactivated context.
+To keep those reactions lifecycle-safe, the listener defers snackbars and navigation to post-frame callbacks. The lyrics scroller follows the same pattern for scroll commands and state cleanup, which avoids mutating Riverpod state or looking up ancestors from a deactivated context.
 The lyrics view also disables transpose controls for plain-text files and resets the transpose offset to zero when a non-ChordPro song is opened.
 
 ---
@@ -157,21 +157,21 @@ The lyrics view also disables transpose controls for plain-text files and resets
 Implemented in the current codebase.
 
 ### Result
-The app now uses `GoRouter` through `MaterialApp.router` with a single named route tree:
+The app now uses `GoRouter` through `MaterialApp.router` with a centralized route tree:
 
 ```text
 MyApp
   -> MaterialApp.router
   -> appRouterProvider
       -> GoRoute(name: main, path: /)
-      -> GoRoute(name: lyrics, path: /lyrics)
-      -> GoRoute(name: preferences, path: /preferences)
+          -> GoRoute(name: lyrics, path: lyrics)
+          -> GoRoute(name: preferences, path: preferences)
 ```
 
 Navigation now uses declarative named routes consistently:
 - `MainView` opens preferences with `context.pushNamed(AppRoutes.preferences)`.
 - `MainView` opens lyrics with `context.pushNamed(AppRoutes.lyrics, extra: song)`.
-- `GoRouter` builds `MainView`, `SongView`, and `PreferenceView` from one central route tree.
+- `GoRouter` builds `MainView`, `SongView`, and `PreferenceView` from one central route tree, while the lyrics route now rejects requests that do not include a `Song` payload.
 
 ---
 
@@ -190,7 +190,52 @@ This keeps the formatting logic out of the widget tree while still giving musici
 
 ---
 
-## 8. Summary & Implementation Roadmap
+## 8. Recommendation 7: Isolate Song-Loader Side Effects
+
+### Status
+Implemented in the current codebase.
+
+### Result
+`MainView` now stays focused on composition, while a dedicated `SongLoaderEffectsListener` owns the transient snackbars and route changes triggered by `SongLoaderController` state.
+
+That separation keeps the page layout easier to read and makes the effect handling reusable if another screen ever needs to respond to the same loader state:
+
+```text
+MainView
+  -> SongLoaderEffectsListener
+  -> songLoaderControllerProvider
+  -> snackbars + lyrics navigation
+```
+
+The listener still performs the UI reactions in the presentation layer, but the orchestration is no longer embedded directly inside the page widget.
+
+---
+
+## 9. Recommendation 8: Nest Route Ownership and Guard the Song Payload
+
+### Status
+Implemented in the current codebase.
+
+### Result
+The router now groups feature routes beneath the main app route instead of keeping every destination in one flat top-level list.
+
+`lyrics` is also guarded so it only opens when a `Song` payload is present:
+
+```text
+GoRoute(path: '/')
+  -> MainView
+  -> GoRoute(path: 'lyrics')
+      -> requires Song extra
+      -> SongView
+  -> GoRoute(path: 'preferences')
+      -> PreferenceView
+```
+
+This keeps route ownership clearer, gives the lyrics page a basic payload guard, and leaves room for future shells or redirects without changing the public navigation API.
+
+---
+
+## 10. Summary & Implementation Roadmap
 
 | Priority | Initiative | Effort | Impact | Risk |
 |---|---|---|---|---|
@@ -201,3 +246,5 @@ This keeps the formatting logic out of the widget tree while still giving musici
 | **Completed** | Introduce `SongRepository`, abstract platform file picker, and decouple `Song` from `dart:io` | Medium | High | Low |
 | **Completed** | Introduce `SongLoaderController` to remove business logic from `MainView` | Medium | High | Low |
 | **Completed** | Add ChordPro parsing, chord transposition, and responsive wide-screen song layout | Medium | High | Medium |
+| **Completed** | Extract song-loader side effects into a dedicated listener widget | Low | Medium | Low |
+| **Completed** | Nest lyrics/preferences routes beneath the main route and guard lyrics payloads | Low | Medium | Low |

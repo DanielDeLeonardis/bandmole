@@ -1,4 +1,5 @@
 import 'package:bandmole/main.dart';
+import 'package:bandmole/src/navigation/app_router.dart';
 import 'package:bandmole/src/features/preferences/presentation/views/preferences_view.dart';
 import 'package:bandmole/src/features/lyrics_scroller/presentation/views/song_view.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,28 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Song Search'), findsOneWidget);
+  });
+
+  testWidgets('Lyrics route redirects to home when song payload is missing',
+      (WidgetTester tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final router = container.read(appRouterProvider);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    router.go('/lyrics');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Song Search'), findsOneWidget);
+    expect(find.byType(SongView), findsNothing);
   });
 
   testWidgets('SongView renders lyrics and control buttons',
