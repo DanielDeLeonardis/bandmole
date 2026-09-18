@@ -97,10 +97,12 @@ void main() {
 
   testWidgets('SongView allows consecutive font size and scroll speed adjustments',
       (WidgetTester tester) async {
+    final longLyrics = List.generate(50, (i) => 'Song Line $i').join('\n');
+
     await tester.pumpWidget(
-      const ProviderScope(
+      ProviderScope(
         child: MaterialApp(
-          home: SongView(text: 'Sample song lyrics text line 1\nLine 2'),
+          home: SongView(text: longLyrics),
         ),
       ),
     );
@@ -151,6 +153,90 @@ void main() {
     await tester.tap(find.byIcon(Icons.fast_rewind));
     await tester.pumpAndSettle();
     expect(find.text('5', skipOffstage: false), findsOneWidget);
+  });
+
+  testWidgets('SongView disables scroll speed buttons when text fits on screen',
+      (WidgetTester tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 2200));
+
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: MaterialApp(
+          home: SongView(text: 'Short lyric line'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final increaseScrollSpeedButton =
+        find.widgetWithIcon(ElevatedButton, Icons.fast_forward);
+    final decreaseScrollSpeedButton =
+        find.widgetWithIcon(ElevatedButton, Icons.fast_rewind);
+
+    expect(
+      tester.widget<ElevatedButton>(increaseScrollSpeedButton).onPressed,
+      isNull,
+    );
+    expect(
+      tester.widget<ElevatedButton>(decreaseScrollSpeedButton).onPressed,
+      isNull,
+    );
+  });
+
+  testWidgets('SongView updates scroll speed buttons after resizing the screen',
+      (WidgetTester tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final longLyrics = List.generate(50, (i) => 'Song Line $i').join('\n');
+
+    await tester.binding.setSurfaceSize(const Size(400, 700));
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          home: SongView(text: longLyrics),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final increaseScrollSpeedButton =
+        find.widgetWithIcon(ElevatedButton, Icons.fast_forward);
+    final decreaseScrollSpeedButton =
+        find.widgetWithIcon(ElevatedButton, Icons.fast_rewind);
+
+    expect(
+      tester.widget<ElevatedButton>(increaseScrollSpeedButton).onPressed,
+      isNotNull,
+    );
+    expect(
+      tester.widget<ElevatedButton>(decreaseScrollSpeedButton).onPressed,
+      isNotNull,
+    );
+
+    await tester.binding.setSurfaceSize(const Size(400, 2200));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<ElevatedButton>(increaseScrollSpeedButton).onPressed,
+      isNull,
+    );
+    expect(
+      tester.widget<ElevatedButton>(decreaseScrollSpeedButton).onPressed,
+      isNull,
+    );
+
+    await tester.binding.setSurfaceSize(const Size(400, 700));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<ElevatedButton>(increaseScrollSpeedButton).onPressed,
+      isNotNull,
+    );
+    expect(
+      tester.widget<ElevatedButton>(decreaseScrollSpeedButton).onPressed,
+      isNotNull,
+    );
   });
 
   testWidgets('SongView start and stop scrolling toggle',

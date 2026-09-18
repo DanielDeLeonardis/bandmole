@@ -68,6 +68,7 @@ Domain Models
     - Reads `autoScrollableTextProvider` for font size, speed, scroll toggle, and boundary flags.
     - Dispatches all scroll-related actions via `autoScrollableTextProvider.notifier`.
     - Reads `songTransposeProvider` for chord transposition state.
+  - Disables the scroll speed controls when the rendered lyrics fit within the viewport, and that enabled state is recalculated when the window is resized.
 
 - **`PreferenceView` (`lib/src/features/preferences/presentation/views/preferences_view.dart`)**
   - Displays a `ListView` of selectable color theme cards.
@@ -78,6 +79,7 @@ Domain Models
   - Manages a local `ScrollController` attached to a `SingleChildScrollView`.
   - Computes dynamic linear scroll durations based on `scrollSpeed`, `maxScrollExtent`, and current `offset`.
   - Listens to `autoScrollableTextProvider` state updates, including `pendingCommand`, to adjust active animations and handle jump requests.
+  - Observes viewport metric changes so resize events trigger a fresh boundary check, keeping `isAtStart`, `isAtEnd`, and the scroll speed control state in sync with the current layout.
   - Intercepts scroll notifications via `NotificationListener<ScrollNotification>` to detect user touches and naturally completed scrolls.
   - Renders parsed song content through `SongFormatter` and `SongTextRenderer`, which preserve plain text lyrics while adding ChordPro-aware metadata and responsive two- or three-column layout support on wide screens.
 
@@ -106,6 +108,7 @@ State management is implemented using Riverpod:
      - `clearPendingCommand`
      - `resetScrollState`
      - `setPositionState`
+   - `setPositionState()` is called after initial layout and after viewport metric changes so boundary flags stay accurate when the window size changes.
    - Defined via manual `NotifierProvider`.
 
 2. **`AppThemeNotifier` (`app_themes_provider.dart`)**

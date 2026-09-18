@@ -24,7 +24,7 @@ class AutoScrollableTextWidget extends ConsumerStatefulWidget {
 
 class _AutoScrollableTextWidgetState
     extends ConsumerState<AutoScrollableTextWidget>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   final ScrollController _scrollController = ScrollController();
   late final AutoScrollableTextNotifier _textNotifier;
   ProviderSubscription<AutoScrollableText>? _autoScrollableTextSubscription;
@@ -33,6 +33,7 @@ class _AutoScrollableTextWidgetState
   void initState() {
     super.initState();
     _textNotifier = ref.read(autoScrollableTextProvider.notifier);
+    WidgetsBinding.instance.addObserver(this);
     _autoScrollableTextSubscription = ref.listenManual(
       autoScrollableTextProvider,
       (previous, next) {
@@ -71,7 +72,13 @@ class _AutoScrollableTextWidgetState
   }
 
   @override
+  void didChangeMetrics() {
+    _schedulePostFrame(_updatePositionState);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _autoScrollableTextSubscription?.close();
     _scrollController.dispose();
     super.dispose();

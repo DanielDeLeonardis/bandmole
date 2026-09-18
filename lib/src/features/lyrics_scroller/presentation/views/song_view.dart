@@ -74,6 +74,7 @@ class SongView extends ConsumerWidget {
         isAtEnd: model.isAtEnd,
         isAtStart: model.isAtStart,
         isScrolling: model.isScrolling,
+        canAdjustScrollSpeed: !(model.isAtStart && model.isAtEnd),
         onIncreaseTextFontSize: increaseTextFontSize,
         onDecreaseTextFontSize: decreaseTextFontSize,
         onTransposeDown: transposeDown,
@@ -98,6 +99,7 @@ class _SongControlsRail extends StatelessWidget {
     required this.isAtEnd,
     required this.isAtStart,
     required this.isScrolling,
+    required this.canAdjustScrollSpeed,
     required this.onIncreaseTextFontSize,
     required this.onDecreaseTextFontSize,
     required this.onTransposeDown,
@@ -117,6 +119,7 @@ class _SongControlsRail extends StatelessWidget {
   final bool isAtEnd;
   final bool isAtStart;
   final bool isScrolling;
+  final bool canAdjustScrollSpeed;
   final VoidCallback onIncreaseTextFontSize;
   final VoidCallback onDecreaseTextFontSize;
   final VoidCallback onTransposeDown;
@@ -208,7 +211,10 @@ class _SongControlsRail extends StatelessWidget {
                   const SizedBox(height: 24),
                   ToolTipRaisedButton(
                     tip: 'Increase scroll speed',
-                    onPressed: scrollSpeed < 99 ? onIncreaseScrollSpeed : null,
+                    onPressed:
+                        canAdjustScrollSpeed && scrollSpeed < 99
+                            ? onIncreaseScrollSpeed
+                            : null,
                     icon: const Icon(Icons.fast_forward),
                   ),
                   const SizedBox(height: 5),
@@ -219,7 +225,10 @@ class _SongControlsRail extends StatelessWidget {
                   const SizedBox(height: 5),
                   ToolTipRaisedButton(
                     tip: 'Decrease scroll speed',
-                    onPressed: scrollSpeed > 1 ? onDecreaseScrollSpeed : null,
+                    onPressed:
+                        canAdjustScrollSpeed && scrollSpeed > 1
+                            ? onDecreaseScrollSpeed
+                            : null,
                     icon: const Icon(Icons.fast_rewind),
                   ),
                 ],

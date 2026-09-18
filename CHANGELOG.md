@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Auto Scrollable Text Module (`auto_scrollable_text`)**:
   - Unified jump navigation and scroll state into a single `AutoScrollableTextNotifier` flow by adding `pendingCommand` to the `AutoScrollableText` model and routing "Go to start" / "Go to end" through the same Riverpod state used for play, stop, font size, and speed controls.
+  - Fixed scroll-speed controls so they now disable when the song fits on screen and re-evaluate automatically after viewport resize events, keeping the button state in sync with the current layout.
   - Removed the separate event-stream style jump path from the architecture docs and aligned the README project structure with the current provider/model layout.
   - Kept the existing auto-scroll boundary and toggle behavior covered by the unit and widget tests in `test/auto_scrollable_text_test.dart` and `test/widget_test.dart`.
 
@@ -62,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `AutoScrollableTextWidget` to listen directly to `autoScrollableTextProvider` state changes for live animation adjustments when scroll speed or scrolling status changes.
   - Fixed issue where the play button remained inactive when opening a new song if a previously viewed song completed scrolling to the end.
   - Added `resetScrollState()` to `AutoScrollableTextNotifier` to reset scroll flags (`isScrolling: false`, `isAtStart: true`, `isAtEnd: false`) on song load while preserving custom `scrollSpeed` and `textFontSize` preferences.
-  - Added post-frame layout validation in `AutoScrollableTextWidget` during initialization and widget rebuilds to automatically determine if a song is fully visible on screen (`maxScrollExtent <= 0.0`) or scrollable.
+  - Added post-frame layout validation in `AutoScrollableTextWidget` during initialization, widget rebuilds, and viewport metric changes to automatically determine if a song is fully visible on screen (`maxScrollExtent <= 0.0`) or scrollable.
   - Added disposal cleanup in `AutoScrollableTextWidget` to cancel stream subscriptions and ensure scrolling is stopped when leaving the song view.
 
 ### Added

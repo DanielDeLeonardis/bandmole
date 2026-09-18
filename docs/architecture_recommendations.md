@@ -26,6 +26,7 @@ Scrolling interactions now flow through a single Riverpod notifier:
 - `autoScrollableTextProvider` (`NotifierProvider`): stores scroll speed, font size, boundary flags (`isScrolling`, `isAtStart`, `isAtEnd`), and one-shot jump commands via `pendingCommand`.
 
 This removes the separate event-stream jump path, avoids manual stream subscription management inside widgets, and keeps jump navigation in the same reactive state flow as the rest of the scroll controls.
+The same layout-driven boundary state now refreshes after viewport resize events so the scroll speed buttons stay aligned with whether the song currently fits on screen.
 
 ### Current Flow
 The `AutoScrollableTextNotifier` exposes scroll commands directly, while `AutoScrollableTextWidget` listens for state changes and consumes `pendingCommand` when a jump is requested:
@@ -45,6 +46,7 @@ The `AutoScrollableTextNotifier` exposes scroll commands directly, while `AutoSc
 
 ### Implementation Note
 When `jumpToStart()` is called, the notifier sets `pendingCommand = ScrollCommand.jumpToStart`. The widget's manual listener consumes the command, animates, and calls `notifier.clearPendingCommand()`. This eliminates `AutoScrollableTextService`, `autoScrollableTextEventProvider`, and raw `StreamSubscription` lifecycle management.
+`AutoScrollableTextWidget` also observes viewport metric changes and re-runs its boundary check after the next frame, which keeps the start/end flags and related button state current if the window is resized.
 
 ---
 

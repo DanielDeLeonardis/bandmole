@@ -12,7 +12,7 @@ BandMole is a Flutter application designed for musicians and performers to displ
   - Continuous, linear auto-scrolling with configurable scroll speeds (1 to 99).
   - Play / Stop toggle with immediate halt on touch gestures or stop button.
   - Quick navigation controls: **Go to Start** and **Go to End** driven by a unified scroll-command state in Riverpod.
-  - Automatic button state updates, disabling transport buttons when already at the start or end, or when content fits within the screen.
+  - Automatic button state updates, disabling transport buttons when already at the start or end, or when content fits within the screen, and re-evaluating that state when the window is resized.
   - Responsive song rendering that splits chord charts into side-by-side columns on wide desktop windows.
 
 - **Typography & Readability**:
