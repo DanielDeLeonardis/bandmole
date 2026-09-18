@@ -28,15 +28,15 @@ Scrolling interactions now flow through a single Riverpod notifier:
 This removes the separate event-stream jump path, avoids manual stream subscription management inside widgets, and keeps jump navigation in the same reactive state flow as the rest of the scroll controls.
 The same layout-driven boundary state now refreshes after viewport resize events so the scroll speed buttons stay aligned with whether the song currently fits on screen.
 
-### Current Flow
+### Flow
 The `AutoScrollableTextNotifier` exposes scroll commands directly, while `AutoScrollableTextWidget` listens for state changes and consumes `pendingCommand` when a jump is requested:
 
 ```text
 +--------------------------------------------------+
-| Unified LyricsController                         |
+| Unified Auto-Scroll State                        |
 | - State: AutoScrollableText                      |
 |   (speed, font, boundaries, pendingCommand)      |
-| - Commands: togglePlay(), jumpToStart(), jumpToEnd() |
+| - Commands: toggleIsScrolling(), jumpToStart(), jumpToEnd() |
 +--------------------------------------------------+
                          |
             +------------+-------------+
