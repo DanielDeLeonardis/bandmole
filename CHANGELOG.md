@@ -5,6 +5,37 @@ All notable changes to the BandMole project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Project Structure**:
+  - Adopted a feature-first layered layout under `lib/src/` and moved the app into `core/` and `features/` folders for `lyrics_scroller`, `song_loader`, and `preferences`.
+  - Removed the old top-level `models/`, `providers/`, `service/`, `views/`, and `widgets/` folders so the source tree now matches the layered architecture docs.
+
+- **Song Loading / Repository Pattern**:
+  - Introduced `SongRepository` as the domain boundary for file picking and file loading, with `SongFile` used as a platform-neutral file handle.
+  - Split file access into `SongFilePicker`, `SongFileReader`, and `SongRepositoryImpl`, and moved the Windows picker behind a platform-specific implementation.
+  - Updated the Windows file picker to present a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) instead of separate file-type entries.
+  - Refactored `MainView` to call the repository instead of directly orchestrating file dialogs, file reads, and decoding.
+  - Extracted the song-loading workflow into `SongLoaderController`, with `SongLoaderEffectsListener` now handling snackbars, route transitions, and transpose resets outside the page layout.
+  - Standardized app navigation on `GoRouter` with nested named routes for the main screen, lyrics view, and preferences view.
+  - Added a payload guard to the lyrics route so direct navigation without a `Song` redirects back to the home screen.
+  - Hardened the `MainView` and lyrics scroller listener lifecycles by deferring snackbars, navigation, and scroll-state cleanup to post-frame callbacks so they do not act on a deactivated widget tree.
+  - Updated `Song` so it no longer depends on `dart:io File`, and added file-type-aware transposition gating so plain text songs keep transpose controls disabled and reset to concert pitch when opened.
+  - Added unit coverage for the repository implementation in `test/src/features/song_loader/data/song_repository_impl_test.dart`.
+
+- **Auto Scrollable Text Module (`auto_scrollable_text`)**:
+  - Unified jump navigation and scroll state into a single `AutoScrollableTextNotifier` flow by adding `pendingCommand` to the `AutoScrollableText` model and routing "Go to start" / "Go to end" through the same Riverpod state used for play, stop, font size, and speed controls.
+  - Fixed scroll-speed controls so they now disable when the song fits on screen and re-evaluate automatically after viewport resize events, keeping the button state in sync with the current layout.
+  - Removed the separate event-stream style jump path from the architecture docs and aligned the README project structure with the current provider/model layout.
+  - Kept the existing auto-scroll boundary and toggle behavior covered by the unit and widget tests in `test/auto_scrollable_text_test.dart` and `test/widget_test.dart`.
+
+- **Rich Chord & Song Formatting**:
+  - Added a pure Dart `SongFormatter` that parses ChordPro-style chord charts, metadata, and section markers into renderable song sections.
+  - Introduced chord transposition controls in `SongView`, with a `SongTransposeNotifier` to shift the displayed key up or down semitones. Those controls are enabled only for ChordPro songs, and plain text songs automatically reset the transpose offset to zero when opened.
+  - Updated the lyric renderer to preserve plain-text songs while rendering chord charts in rich chord-over-lyric rows, with a responsive two- or three-column layout on wide desktop windows.
+  - Added unit coverage for chord parsing and transposition in `test/src/features/lyrics_scroller/domain/song_formatting_test.dart`.
+
 ## [1.0.3] - 2026-09-11
 
 ### Fixed
@@ -32,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `AutoScrollableTextWidget` to listen directly to `autoScrollableTextProvider` state changes for live animation adjustments when scroll speed or scrolling status changes.
   - Fixed issue where the play button remained inactive when opening a new song if a previously viewed song completed scrolling to the end.
   - Added `resetScrollState()` to `AutoScrollableTextNotifier` to reset scroll flags (`isScrolling: false`, `isAtStart: true`, `isAtEnd: false`) on song load while preserving custom `scrollSpeed` and `textFontSize` preferences.
-  - Added post-frame layout validation in `AutoScrollableTextWidget` during initialization and widget rebuilds to automatically determine if a song is fully visible on screen (`maxScrollExtent <= 0.0`) or scrollable.
+  - Added post-frame layout validation in `AutoScrollableTextWidget` during initialization, widget rebuilds, and viewport metric changes to automatically determine if a song is fully visible on screen (`maxScrollExtent <= 0.0`) or scrollable.
   - Added disposal cleanup in `AutoScrollableTextWidget` to cancel stream subscriptions and ensure scrolling is stopped when leaving the song view.
 
 ### Added

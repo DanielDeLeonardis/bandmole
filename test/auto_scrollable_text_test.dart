@@ -1,4 +1,5 @@
-import 'package:bandmole/providers/auto_scrollable_text_provider.dart';
+import 'package:bandmole/src/features/lyrics_scroller/domain/auto_scrollable_text.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/auto_scrollable_text_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -13,6 +14,7 @@ void main() {
     expect(state.isAtEnd, isFalse);
     expect(state.scrollSpeed, equals(5));
     expect(state.textFontSize, equals(18.0));
+    expect(state.pendingCommand, isNull);
   });
 
   test('Font size increase and decrease within bounds', () {
@@ -106,5 +108,39 @@ void main() {
     expect(resetState.isScrolling, isFalse);
     expect(resetState.isAtStart, isTrue);
     expect(resetState.isAtEnd, isFalse);
+    expect(resetState.pendingCommand, isNull);
+  });
+
+  test('jumpToStart, jumpToEnd, and clearPendingCommand update state correctly', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final notifier = container.read(autoScrollableTextProvider.notifier);
+
+    // Initially pendingCommand is null
+    expect(container.read(autoScrollableTextProvider).pendingCommand, isNull);
+
+    // Start scrolling then jumpToEnd
+    notifier.toggleIsScrolling();
+    expect(container.read(autoScrollableTextProvider).isScrolling, isTrue);
+
+    notifier.jumpToEnd();
+    final endState = container.read(autoScrollableTextProvider);
+    expect(endState.isScrolling, isFalse);
+    expect(endState.pendingCommand, equals(ScrollCommand.jumpToEnd));
+
+    // Clear pending command
+    notifier.clearPendingCommand();
+    expect(container.read(autoScrollableTextProvider).pendingCommand, isNull);
+
+    // jumpToStart
+    notifier.jumpToStart();
+    final startState = container.read(autoScrollableTextProvider);
+    expect(startState.isScrolling, isFalse);
+    expect(startState.pendingCommand, equals(ScrollCommand.jumpToStart));
+
+    // clearPendingCommand
+    notifier.clearPendingCommand();
+    expect(container.read(autoScrollableTextProvider).pendingCommand, isNull);
   });
 }
