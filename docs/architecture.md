@@ -91,7 +91,7 @@ Domain Models
 
 ### 3.2 State Management & Application Logic (`lib/src/features/.../presentation/providers/`)
 
-State management is implemented using Riverpod:
+State management uses Riverpod:
 
 1. **`AutoScrollableTextNotifier` (`auto_scrollable_text_provider.dart`)**
    - Manages the core reading session state encapsulated in the Freezed model `AutoScrollableText`.
@@ -129,9 +129,6 @@ State management is implemented using Riverpod:
 
 ### 3.3 Data & Infrastructure Services (`lib/src/features/.../data/`)
 
-- **`file_service.dart`**
-  - Replaced by `SongRepositoryImpl`, which reads raw file bytes through `SongFileReader` and attempts strict UTF-8 decoding before falling back to `allowMalformed: true`.
-
 - **`song_repository_impl.dart`**
   - Implements the repository boundary for file access.
   - Delegates file selection to a `SongFilePicker` and file-byte reading to a `SongFileReader`.
@@ -142,7 +139,7 @@ State management is implemented using Riverpod:
 - **`preference_service.dart`**
   - Wraps `SharedPreferences` to load and save `themeData` by enum string representation.
 
-The former auto-scroll stream service is no longer part of the implementation. Jump navigation is carried by the shared notifier state rather than a separate `StreamController`.
+Jump navigation is carried by the shared notifier state rather than a separate `StreamController`.
 
 ---
 
@@ -234,10 +231,7 @@ The former auto-scroll stream service is no longer part of the implementation. J
 
 ---
 
-## 6. Architectural Weaknesses & Technical Debt
+## 6. Architectural Notes
 
-1. **Presentation Side Effects**
-   - `SongLoaderEffectsListener` performs snackbar presentation and route triggering in response to controller state. This keeps the UI reactions in the presentation layer, but the orchestration is isolated from the page layout.
-
-2. **Flat Route Tree**
-   - The router is grouped beneath the main route with a basic payload guard on `lyrics`, but the app does not need deeper shells or complex route authorization yet.
+1. `SongLoaderEffectsListener` owns the snackbar and navigation side effects for the song-loading flow, keeping the page layout focused on composition.
+2. The router uses a grouped route tree with a payload guard on `lyrics`, which keeps route ownership clear without adding unnecessary shells or authorization layers.
