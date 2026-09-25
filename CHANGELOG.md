@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Static Analysis**:
+  - Removed unused optional constructor parameters (`type`, `label`) from `_SongSectionBuilder` in `lib/src/features/lyrics_scroller/domain/song_formatting.dart` to resolve `unused_element_parameter` analyzer warnings.
+
 - **Project Structure**:
   - Adopted a feature-first layered layout under `lib/src/` and moved the app into `core/` and `features/` folders for `lyrics_scroller`, `song_loader`, and `preferences`.
   - Removed the old top-level `models/`, `providers/`, `service/`, `views/`, and `widgets/` folders so the source tree now matches the layered architecture docs.
@@ -35,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Introduced chord transposition controls in `SongView`, with a `SongTransposeNotifier` to shift the displayed key up or down semitones. Those controls are enabled only for ChordPro songs, and plain text songs automatically reset the transpose offset to zero when opened.
   - Updated the lyric renderer to preserve plain-text songs while rendering chord charts in rich chord-over-lyric rows, with a responsive two- or three-column layout on wide desktop windows.
   - Added unit coverage for chord parsing and transposition in `test/src/features/lyrics_scroller/domain/song_formatting_test.dart`.
+
+### Added
+- **Product & Requirements Documentation**:
+  - Added **Release 6: Data Import and Export** specifications to `docs/requirements.md`, `docs/roadmap.md`, and `docs/prd.md`, defining full and granular export/import of songs, setlists, and app preferences via portable `.zip` bundles with interactive overwrite warnings and skip/proceed choices.
+  - Specified cross-device relative path referencing for song assignments in gigs and sets.
+  - Added broken-link specifications for gigs containing missing song files, enabling performers to re-link or remove missing items while keeping the gig editable.
+  - Added user confirmation prompts (Save / Discard / Cancel) when navigating away from the editor or switching songs with unsaved changes.
+  - Updated `docs/index.md` and `README.md` to reference the complete documentation suite, including system architecture and technical recommendations.
 
 ## [1.0.3] - 2026-09-11
 

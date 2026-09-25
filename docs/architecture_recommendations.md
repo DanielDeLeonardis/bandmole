@@ -6,7 +6,7 @@
 
 ## 1. Overview & Objectives
 
-While BandMole currently fulfills its core responsibilities with high test coverage and responsive controls, several structural and design patterns can be improved to align with Flutter industry best practices, especially the layered Presentation / Domain / Data approach.
+While BandMole currently fulfills its prototype responsibilities with responsive controls, several structural and design patterns can be improved to align with Flutter industry best practices and the six-release product requirements, especially the layered Presentation / Domain / Data approach.
 
 Key goals of these recommendations:
 1. Eliminate redundant state channels between UI components.
@@ -56,7 +56,7 @@ When `jumpToStart()` is called, the notifier sets `pendingCommand = ScrollComman
 Implemented in the current codebase.
 
 ### Result
-The application now lives under a feature-first tree in `lib/src/`:
+The current prototype lives under a feature-first tree in `lib/src/`; planned release boundaries should extend this structure for the Songs Panel, Song Groups, ChordPro Editor, Song Charts, Metadata, and Data Import and Export:
 
 ```text
 lib/
@@ -105,13 +105,14 @@ MainView
 ```
 
 The domain layer now owns a platform-neutral file model:
-- `SongFile` stores the selected file path without exposing `dart:io File`.
+- `SongFile` stores the selected file path and any platform-specific access capability without exposing `dart:io File`.
 - `SongFile` also exposes extension-based ChordPro detection so the UI can gate transposition behavior on the loaded source type.
-- `SongRepository` exposes `pickSongFile()` and `loadSong(SongFile)` as the only public file-access operations.
+- The current prototype `SongRepository` exposes `pickSongFile()` and `loadSong(SongFile)`; the target library API should add root-directory selection, recursive refresh, warning reporting, and broken-reference relinking.
 
-The data layer now provides platform-specific implementations behind the repository:
+The data layer now provides platform-specific implementations behind the repository, and the target design should extend this boundary to directory access and persisted platform capabilities:
 - `WindowsSongFilePicker` wraps `filepicker_windows`.
-- `UnsupportedSongFilePicker` allows non-Windows builds to compile and fail gracefully at runtime.
+- Android and Web implementations should use platform-appropriate directory pickers and persist permissions or handles where supported.
+- Capability-specific fallbacks should report unavailable access clearly rather than treating required platforms as unsupported.
 - `IoSongFileReader` reads the selected file bytes for decoding.
 
 `MainView` now only reacts to controller outcomes:
@@ -138,6 +139,11 @@ MainView
   -> SongLoaderController.pickAndLoadSong()
       -> SongRepository.pickSongFile()
       -> SongRepository.loadSong(file)
+
+Target library flow:
+  -> SongRepository.selectRootDirectory()
+  -> SongRepository.refreshLibrary()
+  -> SongRepository.relinkSongReference()
 ```
 
 `MainView` now stays focused on layout while a dedicated `SongLoaderEffectsListener` reacts to controller state changes:
