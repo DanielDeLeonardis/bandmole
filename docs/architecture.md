@@ -6,13 +6,15 @@
 
 ## 1. Executive Summary
 
-BandMole is a specialized Flutter desktop application for loading, displaying, and smoothly auto-scrolling song lyrics and chord charts. The codebase is organized around a small set of focused features: file selection and encoding validation, configurable auto-scrolling with transport playback controls, text customization, and persistent user themes.
+BandMole is an offline-first Flutter application targeting Windows 10 and Android 10 first, with Linux and Web planned next, for managing, displaying, and smoothly auto-scrolling song lyrics and chord charts. The current codebase is organized around a small set of focused features: file selection and encoding validation, configurable auto-scrolling with transport playback controls, text customization, and persistent user themes.
 
 The architecture blends Flutter Riverpod state management, Freezed immutable data models, and Flutter widget lifecycle hooks with platform abstractions for file picking and decoding.
 
 Auto-scroll jump actions are unified into a single `AutoScrollableTextNotifier` flow. Instead of a separate event stream, jump navigation is represented as a one-shot `pendingCommand` on the shared `AutoScrollableText` state.
 
 The codebase is organized in a feature-first structure under `lib/src/` with shared UI helpers in `core/` and feature folders for `lyrics_scroller`, `preferences`, and `song_loader`.
+
+The current implementation is the foundation for six planned release areas: Songs Panel, Song Groups, ChordPro Editor, Song Charts, Metadata, and Data Import and Export. The target architecture expands the current single-file loading flow into a recursively scanned song library with platform-specific directory access, persisted permissions or handles where supported, and explicit warning and broken-reference states.
 
 ---
 
@@ -39,8 +41,8 @@ State Management & Logic
 
 Services & Infrastructure
   - PreferenceService (SharedPreferences)
-  - SongRepository + SongFileReader + SongFilePicker
-  - WindowsSongFilePicker / UnsupportedSongFilePicker
+  - SongRepository + SongFileReader + SongDirectoryScanner
+  - Platform-specific directory access and persisted access capabilities
 
 Domain Models
   - Song, SongFile, SongRepository, AutoScrollableText (Freezed), SongFormattingResult, AppTheme
@@ -133,6 +135,10 @@ State management uses Riverpod:
   - Implements the repository boundary for file access.
   - Delegates file selection to a `SongFilePicker` and file-byte reading to a `SongFileReader`.
   - Returns `Song` models that carry a platform-neutral `SongFile` rather than a raw `dart:io File`.
+- **Target directory access and scanning services**
+  - Select and persist one root song directory using platform-appropriate picker permissions or handles.
+  - Recursively scan supported files, report file and path warnings, and retain unavailable roots for later restoration.
+  - Use filename heuristics for renamed or moved songs, offer manual relinking for ambiguous matches, and preserve unresolved references as broken links.
 - **`windows_song_file_picker.dart`**
   - Configures the Windows file dialog with a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) so the dialog shows matching files without forcing the user to choose a specific type.
 
@@ -175,11 +181,12 @@ Jump navigation is carried by the shared notifier state rather than a separate `
 ### 4.1 Song Selection & Loading Flow
 
 ```text
-[User taps 'Open song']
-  -> MainView dispatches to SongLoaderController.pickAndLoadSong()
-  -> SongLoaderController invokes SongRepository.pickSongFile()
-  -> If no file is selected, show a 'No song selected' SnackBar
-  -> If a file is selected, call SongRepository.loadSong(file)
+[User opens the Songs Panel]
+  -> SongLoaderController selects or restores the persisted root directory
+  -> SongDirectoryScanner recursively scans supported files and reports warnings
+  -> Refresh or gig opening compares paths and uses filename heuristics for moved songs
+  -> Ambiguous matches are manually relinked; unresolved references remain broken links
+  -> User selects a song and SongRepository.loadSong(file) replaces the current song
   -> Decode bytes as UTF-8
      - Success: isMalformed = false
      - Failure: fallback with allowMalformed = true, isMalformed = true
@@ -225,9 +232,9 @@ Jump navigation is carried by the shared notifier state rather than a separate `
 5. **Declarative Routing**: `MyApp` uses `MaterialApp.router` with a centralized `GoRouter`, which standardizes route handling across the app and makes future deep-link support easier to add.
 6. **Repository-Based File Access**: Song loading flows through `SongRepository`, `SongFilePicker`, and `SongFileReader`, which keeps file selection and decoding out of the presentation layer and makes the data boundary easier to test.
 7. **Rich Song Presentation**: The formatter/parser layer understands ChordPro-style markup, transposition, and responsive two- or three-column song layouts for wide screens, while plain-text songs keep transpose controls disabled and reset to concert pitch.
-8. **Feature-First Layout**: Related code lives together under `lib/src/features/`, which makes the three app areas easier to navigate.
+8. **Feature-First Layout**: Related code lives together under `lib/src/features/`, which makes the current implementation areas and planned release boundaries easier to navigate.
 9. **Defensive Decoding**: File ingestion accounts for character encoding anomalies, preventing crashes on non-UTF-8 song files.
-10. **High Automated Test Coverage**: Unit tests cover provider mutations and boundary conditions; widget tests validate multi-step interactive workflows, routing, scrolling actions, and chord transposition.
+10. **Measurable Test Target**: Each feature area targets at least 80% branch coverage, with integration coverage for file browsing and persistence alongside unit and widget tests.
 
 ---
 

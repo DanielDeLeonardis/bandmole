@@ -74,6 +74,28 @@ void main() {
       expect(repository.pickSongFileCalls, equals(1));
       expect(repository.loadSongCalls, equals(0));
     });
+
+    test('pickAndLoadSong surfaces song loading failures as AsyncError',
+        () async {
+      final repository = _FakeSongRepository(
+        selectedFile: const SongFile(path: 'C:/music/song.txt'),
+        loadError: UnsupportedError('Song loading is unavailable.'),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          songRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(songLoaderControllerProvider.notifier).pickAndLoadSong();
+
+      final state = container.read(songLoaderControllerProvider);
+      expect(state.hasError, isTrue);
+      expect(state.error, isA<UnsupportedError>());
+      expect(repository.pickSongFileCalls, equals(1));
+      expect(repository.loadSongCalls, equals(1));
+    });
   });
 }
 

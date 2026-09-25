@@ -1,5 +1,9 @@
 # BandMole
 
+Start here: [Docs index](docs/index.md)
+
+---
+
 > A song scroller and lyrics reader for musicians.
 
 BandMole is a Flutter application designed for musicians and performers to display, customize, and automatically scroll lyrics and chord charts during practice and live performances.
@@ -22,8 +26,11 @@ BandMole is a Flutter application designed for musicians and performers to displ
 
 - **Song File Management**:
   - Repository-based song loading flow that separates the UI from file access and decoding concerns.
-  - Platform-specific file selection behind a repository abstraction, with UTF-8 encoding validation and malformed character handling.
+  - A single recursively scanned root song directory, with file and path problems surfaced as warnings.
+  - Platform-specific directory access behind a repository abstraction, with persisted permissions or handles on Android and Web where supported.
+  - UTF-8 encoding validation and malformed character handling.
   - Windows picker shows a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) instead of separate file-type entries.
+  - Renamed or moved songs are matched using filename heuristics, with manual relinking when a match is ambiguous and broken-link status when no match is found.
   - `MainView` delegates snackbars and navigation to a dedicated `SongLoaderEffectsListener`, keeping the page layout focused on composition.
 
 - **Theme Preferences**:
@@ -39,12 +46,12 @@ BandMole is a Flutter application designed for musicians and performers to displ
 
 ## Architecture & Tech Stack
 
-- **Framework**: [Flutter](https://flutter.dev/) (Dart SDK `^3.13.1`)
+- **Framework**: [Flutter](https://flutter.dev/) with the stable Flutter version recorded for reproducible builds and the project-pinned Dart SDK constraint `^3.13.1`
 - **State Management**: [Flutter Riverpod](https://riverpod.dev/) (`flutter_riverpod` + `riverpod_annotation` / `riverpod_generator`)
 - **Navigation**: [GoRouter](https://pub.dev/packages/go_router) with `MaterialApp.router`
 - **Data Modeling**: [Freezed](https://pub.dev/packages/freezed) immutable state objects
 - **Storage**: [shared_preferences](https://pub.dev/packages/shared_preferences) for persistent configuration
-- **File System**: repository-based file access with `filepicker_windows` used only by the Windows picker implementation
+- **File System**: repository-based, platform-specific directory access with `filepicker_windows` used only by the Windows picker implementation
 
 ---
 
@@ -116,7 +123,7 @@ lib/
 
 ### Prerequisites
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.13.1 or higher)
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) matching the version recorded for the project; the current Dart SDK constraint is `^3.13.1`
 - Supported desktop/mobile platform toolchain, for example Windows C++ build tools for Windows desktop
 
 ### Installation
@@ -155,3 +162,17 @@ Run static analysis:
 ```bash
 dart analyze
 ```
+
+---
+
+## Documentation
+
+Comprehensive product and technical documentation is maintained in the [`docs/`](docs/index.md) directory:
+
+- [Documentation Index](docs/index.md) — Directory map and reading guide
+- [Roadmap](docs/roadmap.md) — Release sequence, milestones, and priority tiers
+- [Product Requirements Document](docs/prd.md) — Product goals, scope, and technical constraints
+- [Requirements](docs/requirements.md) — Detailed feature specifications, success criteria, and edge cases
+- [Architecture](docs/architecture.md) — Component breakdown, state flows, and layered architecture
+- [Architecture Recommendations](docs/architecture_recommendations.md) — Modularity guidelines and implemented refactoring roadmap
+

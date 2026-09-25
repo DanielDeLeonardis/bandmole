@@ -7,6 +7,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+Future<void> _pumpScrollAnimation(WidgetTester tester) async {
+  await tester.pump(const Duration(seconds: 5));
+  await tester.pump();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -90,14 +95,20 @@ void main() {
     final transposeUpButton =
         find.widgetWithIcon(ElevatedButton, Icons.add_circle_outline);
 
-    expect(tester.widget<ElevatedButton>(transposeDownButton).onPressed, isNull);
-    expect(tester.widget<ElevatedButton>(transposeResetButton).onPressed, isNull);
+    expect(
+        tester.widget<ElevatedButton>(transposeDownButton).onPressed, isNull);
+    expect(
+        tester.widget<ElevatedButton>(transposeResetButton).onPressed, isNull);
     expect(tester.widget<ElevatedButton>(transposeUpButton).onPressed, isNull);
   });
 
-  testWidgets('SongView allows consecutive font size and scroll speed adjustments',
+  testWidgets(
+      'SongView allows consecutive font size and scroll speed adjustments',
       (WidgetTester tester) async {
-    final longLyrics = List.generate(50, (i) => 'Song Line $i').join('\n');
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 500));
+
+    final longLyrics = List.generate(25, (i) => 'Song Line $i').join('\n');
 
     await tester.pumpWidget(
       ProviderScope(
@@ -135,23 +146,21 @@ void main() {
     expect(find.text('19', skipOffstage: false), findsOneWidget);
 
     // Tap increase scroll speed multiple times
-    await tester.ensureVisible(find.byIcon(Icons.fast_forward));
     await tester.tap(find.byIcon(Icons.fast_forward));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(find.text('6', skipOffstage: false), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.fast_forward));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(find.text('7', skipOffstage: false), findsOneWidget);
 
     // Tap decrease scroll speed multiple times
-    await tester.ensureVisible(find.byIcon(Icons.fast_rewind));
     await tester.tap(find.byIcon(Icons.fast_rewind));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(find.text('6', skipOffstage: false), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.fast_rewind));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(find.text('5', skipOffstage: false), findsOneWidget);
   });
 
@@ -188,7 +197,7 @@ void main() {
       (WidgetTester tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final longLyrics = List.generate(50, (i) => 'Song Line $i').join('\n');
+    final longLyrics = List.generate(25, (i) => 'Song Line $i').join('\n');
 
     await tester.binding.setSurfaceSize(const Size(400, 700));
     await tester.pumpWidget(
@@ -241,7 +250,7 @@ void main() {
 
   testWidgets('SongView start and stop scrolling toggle',
       (WidgetTester tester) async {
-    final longLyrics = List.generate(50, (i) => 'Song Line $i').join('\n');
+    final longLyrics = List.generate(25, (i) => 'Song Line $i').join('\n');
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
@@ -267,7 +276,10 @@ void main() {
 
   testWidgets('SongView go to end and go to start buttons work correctly',
       (WidgetTester tester) async {
-    final longLyrics = List.generate(100, (i) => 'Song Line $i').join('\n');
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 500));
+
+    final longLyrics = List.generate(25, (i) => 'Song Line $i').join('\n');
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
@@ -278,7 +290,8 @@ void main() {
     await tester.pumpAndSettle();
 
     final goToEndFinder = find.widgetWithIcon(ElevatedButton, Icons.skip_next);
-    final goToStartFinder = find.widgetWithIcon(ElevatedButton, Icons.skip_previous);
+    final goToStartFinder =
+        find.widgetWithIcon(ElevatedButton, Icons.skip_previous);
 
     // Initially at start: "Go to start" should be disabled, "Go to end" enabled
     expect(tester.widget<ElevatedButton>(goToStartFinder).onPressed, isNull);
@@ -286,7 +299,7 @@ void main() {
 
     // Tap "Go to end"
     await tester.tap(goToEndFinder);
-    await tester.pumpAndSettle();
+    await _pumpScrollAnimation(tester);
 
     // Now at end: "Go to end" should be disabled, "Go to start" enabled
     expect(tester.widget<ElevatedButton>(goToEndFinder).onPressed, isNull);
@@ -294,7 +307,7 @@ void main() {
 
     // Tap "Go to start"
     await tester.tap(goToStartFinder);
-    await tester.pumpAndSettle();
+    await _pumpScrollAnimation(tester);
 
     // Back at start: "Go to start" disabled, "Go to end" enabled
     expect(tester.widget<ElevatedButton>(goToStartFinder).onPressed, isNull);
@@ -303,7 +316,10 @@ void main() {
 
   testWidgets('SongView go to start stops active scrolling',
       (WidgetTester tester) async {
-    final longLyrics = List.generate(100, (i) => 'Song Line $i').join('\n');
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(400, 500));
+
+    final longLyrics = List.generate(25, (i) => 'Song Line $i').join('\n');
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
@@ -322,12 +338,13 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
     await tester.pump();
 
-    final goToStartFinder = find.widgetWithIcon(ElevatedButton, Icons.skip_previous);
+    final goToStartFinder =
+        find.widgetWithIcon(ElevatedButton, Icons.skip_previous);
     expect(tester.widget<ElevatedButton>(goToStartFinder).onPressed, isNotNull);
 
     // Tap "Go to start"
     await tester.tap(goToStartFinder);
-    await tester.pumpAndSettle();
+    await _pumpScrollAnimation(tester);
 
     // Scrolling should be stopped (play_arrow icon) and at start
     expect(find.byIcon(Icons.play_arrow), findsOneWidget);

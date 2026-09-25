@@ -1,12 +1,4 @@
-enum SongSectionType {
-  freeform,
-  verse,
-  chorus,
-  bridge,
-  intro,
-  outro,
-  tag,
-}
+enum SongSectionType { freeform, verse, chorus, bridge, intro, outro, tag }
 
 class SongFormattingResult {
   const SongFormattingResult({
@@ -31,11 +23,7 @@ class SongFormattingResult {
 }
 
 class SongSection {
-  const SongSection({
-    required this.type,
-    required this.lines,
-    this.label,
-  });
+  const SongSection({required this.type, required this.lines, this.label});
 
   final SongSectionType type;
   final String? label;
@@ -43,25 +31,22 @@ class SongSection {
 }
 
 class SongLine {
-  const SongLine({
-    required this.segments,
-  });
+  const SongLine({required this.segments});
 
   final List<SongLineSegment> segments;
 
-  bool get hasChords =>
-      segments.any((segment) => segment.chord != null && segment.chord!.isNotEmpty);
+  bool get hasChords => segments.any(
+    (segment) => segment.chord != null && segment.chord!.isNotEmpty,
+  );
 
-  bool get isBlank => segments.isEmpty || segments.every((segment) => segment.lyric.isEmpty);
+  bool get isBlank =>
+      segments.isEmpty || segments.every((segment) => segment.lyric.isEmpty);
 
   String get plainText => segments.map((segment) => segment.lyric).join();
 }
 
 class SongLineSegment {
-  const SongLineSegment({
-    required this.lyric,
-    this.chord,
-  });
+  const SongLineSegment({required this.lyric, this.chord});
 
   final String? chord;
   final String lyric;
@@ -98,7 +83,9 @@ class SongFormatter {
     'B',
   ];
 
-  static final RegExp _directiveRegExp = RegExp(r'^\{([^:}]+)(?::\s*([^}]*))?\}$');
+  static final RegExp _directiveRegExp = RegExp(
+    r'^\{([^:}]+)(?::\s*([^}]*))?\}$',
+  );
   static final RegExp _noteRegExp = RegExp(r'^([A-G])([#b]?)(.*)$');
 
   static SongFormattingResult parse(
@@ -160,10 +147,7 @@ class SongFormatter {
           case 'soc':
           case 'start_of_chorus':
             flushSection();
-            builder.reset(
-              type: SongSectionType.chorus,
-              label: 'Chorus',
-            );
+            builder.reset(type: SongSectionType.chorus, label: 'Chorus');
             hasRichFormatting = true;
             continue;
           case 'eoc':
@@ -175,10 +159,7 @@ class SongFormatter {
           case 'start_of_verse':
           case 'sov':
             flushSection();
-            builder.reset(
-              type: SongSectionType.verse,
-              label: 'Verse',
-            );
+            builder.reset(type: SongSectionType.verse, label: 'Verse');
             hasRichFormatting = true;
             continue;
           case 'end_of_verse':
@@ -189,10 +170,7 @@ class SongFormatter {
             continue;
           case 'start_of_bridge':
             flushSection();
-            builder.reset(
-              type: SongSectionType.bridge,
-              label: 'Bridge',
-            );
+            builder.reset(type: SongSectionType.bridge, label: 'Bridge');
             hasRichFormatting = true;
             continue;
           case 'end_of_bridge':
@@ -202,10 +180,7 @@ class SongFormatter {
             continue;
           case 'start_of_intro':
             flushSection();
-            builder.reset(
-              type: SongSectionType.intro,
-              label: 'Intro',
-            );
+            builder.reset(type: SongSectionType.intro, label: 'Intro');
             hasRichFormatting = true;
             continue;
           case 'end_of_intro':
@@ -215,10 +190,7 @@ class SongFormatter {
             continue;
           case 'start_of_outro':
             flushSection();
-            builder.reset(
-              type: SongSectionType.outro,
-              label: 'Outro',
-            );
+            builder.reset(type: SongSectionType.outro, label: 'Outro');
             hasRichFormatting = true;
             continue;
           case 'end_of_outro':
@@ -228,10 +200,7 @@ class SongFormatter {
             continue;
           case 'start_of_tab':
             flushSection();
-            builder.reset(
-              type: SongSectionType.tag,
-              label: 'Tab',
-            );
+            builder.reset(type: SongSectionType.tag, label: 'Tab');
             hasRichFormatting = true;
             continue;
           case 'end_of_tab':
@@ -262,10 +231,7 @@ class SongFormatter {
 
     if (sections.isEmpty) {
       sections.add(
-        SongSection(
-          type: SongSectionType.freeform,
-          lines: const [],
-        ),
+        SongSection(type: SongSectionType.freeform, lines: const []),
       );
     }
 
@@ -281,26 +247,28 @@ class SongFormatter {
     );
   }
 
-  static String transposeChord(
-    String chord,
-    int semitones,
-  ) {
+  static String transposeChord(String chord, int semitones) {
     if (semitones % 12 == 0) {
       return chord;
     }
 
     final trimmed = chord.trim();
     final slashIndex = trimmed.indexOf('/');
-    final rootPart = slashIndex == -1 ? trimmed : trimmed.substring(0, slashIndex);
-    final bassPart = slashIndex == -1 ? null : trimmed.substring(slashIndex + 1);
+    final rootPart = slashIndex == -1
+        ? trimmed
+        : trimmed.substring(0, slashIndex);
+    final bassPart = slashIndex == -1
+        ? null
+        : trimmed.substring(slashIndex + 1);
 
     final transposedRoot = _transposeChordRoot(rootPart, semitones);
     if (transposedRoot == null) {
       return chord;
     }
 
-    final transposedBass =
-        bassPart == null ? null : _transposeChordRoot(bassPart, semitones);
+    final transposedBass = bassPart == null
+        ? null
+        : _transposeChordRoot(bassPart, semitones);
     final suffix = rootPart.substring(_rootLength(rootPart));
 
     if (bassPart == null || transposedBass == null) {
@@ -324,7 +292,9 @@ class SongFormatter {
 
     final preferFlats = base.contains('b');
     final transposedIndex = (noteIndex + semitones) % 12;
-    final normalizedIndex = transposedIndex < 0 ? transposedIndex + 12 : transposedIndex;
+    final normalizedIndex = transposedIndex < 0
+        ? transposedIndex + 12
+        : transposedIndex;
     return preferFlats
         ? _flatNotes[normalizedIndex]
         : _sharpNotes[normalizedIndex];
@@ -350,20 +320,13 @@ class SongFormatter {
 }
 
 class _SongSectionBuilder {
-  _SongSectionBuilder({
-    SongSectionType type = SongSectionType.freeform,
-    String? label,
-  })  : _type = type,
-        _label = label;
+  _SongSectionBuilder() : _label = null, _type = SongSectionType.freeform;
 
   SongSectionType _type;
   String? _label;
   final List<SongLine> _lines = <SongLine>[];
 
-  void reset({
-    SongSectionType type = SongSectionType.freeform,
-    String? label,
-  }) {
+  void reset({SongSectionType type = SongSectionType.freeform, String? label}) {
     _type = type;
     _label = label;
     _lines.clear();
@@ -393,7 +356,9 @@ class _SongFormatterLineParser {
     String rawLine, {
     required int transposeSemitones,
   }) {
-    final matches = _chordTokenRegExp.allMatches(rawLine).toList(growable: false);
+    final matches = _chordTokenRegExp
+        .allMatches(rawLine)
+        .toList(growable: false);
     if (matches.isEmpty) {
       return parsePlainText(rawLine);
     }
@@ -408,16 +373,14 @@ class _SongFormatterLineParser {
         continue;
       }
 
-      final lyricEnd = index + 1 < matches.length ? matches[index + 1].start : rawLine.length;
+      final lyricEnd = index + 1 < matches.length
+          ? matches[index + 1].start
+          : rawLine.length;
       final leadingText = rawLine.substring(cursor, match.start);
       final lyricText = rawLine.substring(match.end, lyricEnd);
 
       if (segments.isEmpty && leadingText.isNotEmpty) {
-        segments.add(
-          SongLineSegment(
-            lyric: leadingText,
-          ),
-        );
+        segments.add(SongLineSegment(lyric: leadingText));
       }
 
       segments.add(
@@ -457,11 +420,9 @@ class _SongFormatterLineParser {
   static _ParsedLine parsePlainText(String rawLine) {
     return _ParsedLine(
       line: SongLine(
-        segments: List<SongLineSegment>.unmodifiable(
-          <SongLineSegment>[
-            SongLineSegment(lyric: rawLine),
-          ],
-        ),
+        segments: List<SongLineSegment>.unmodifiable(<SongLineSegment>[
+          SongLineSegment(lyric: rawLine),
+        ]),
       ),
       hasChords: false,
       hasWrappedDirective: false,
