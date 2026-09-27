@@ -8,6 +8,12 @@ Start here if you want the quickest path into the plan:
 4. [Architecture](./architecture.md) for system architecture, component breakdown, and runtime data flows.
 5. [Architecture Recommendations](./architecture_recommendations.md) for architectural guidelines and refactoring status.
 
+## Current Project Status
+
+This repository is currently a working Release 1 prototype focused on the song library and lyrics-performance workflow. The core implementation includes the library picker, recursive directory scanning, Android SAF persistence, UTF-8-safe loading, auto-scrolling lyrics, theming, and the router-driven UI shell.
+
+The remaining release areas remain planned product work and are documented as future phases rather than shipped functionality. The roadmap and PRD continue to describe the broader product direction.
+
 ## What Each Document Is For
 
 | Document | Purpose |
@@ -18,4 +24,4 @@ Start here if you want the quickest path into the plan:
 | [Architecture](./architecture.md) | Detailed architectural structure, state management, and component responsibilities. |
 | [Architecture Recommendations](./architecture_recommendations.md) | Layered architecture recommendations and implemented refactoring roadmap. |
 
-Last updated: 2026-09-24
+Last updated: 2026-09-27

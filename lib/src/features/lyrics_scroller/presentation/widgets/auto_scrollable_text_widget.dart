@@ -12,10 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AutoScrollableTextWidget extends ConsumerStatefulWidget {
   final String text;
 
-  const AutoScrollableTextWidget({
-    super.key,
-    required this.text,
-  });
+  const AutoScrollableTextWidget({super.key, required this.text});
 
   @override
   ConsumerState<AutoScrollableTextWidget> createState() =>
@@ -59,7 +56,8 @@ class _AutoScrollableTextWidgetState
             scrollSpeed: next.scrollSpeed,
             isScrolling: next.isScrolling,
           );
-        } else if (next.isScrolling && previous.scrollSpeed != next.scrollSpeed) {
+        } else if (next.isScrolling &&
+            previous.scrollSpeed != next.scrollSpeed) {
           _scroll(next.scrollSpeed);
         }
       },
@@ -111,14 +109,11 @@ class _AutoScrollableTextWidgetState
     if (scrollSpeed <= 0) return 1;
     final remaining = screenMaxExtent - screenOffset;
     if (remaining <= 0) return 0;
-    final duration = (remaining / (scrollSpeed * 10)).toInt();
+    final duration = (remaining / (scrollSpeed * 2.5)).toInt();
     return duration < 1 ? 1 : duration;
   }
 
-  void _scrollAnimate({
-    required int duration,
-    required double offset,
-  }) {
+  void _scrollAnimate({required int duration, required double offset}) {
     if (!_scrollController.hasClients) return;
     _scrollController.animateTo(
       offset,
@@ -192,7 +187,21 @@ class _AutoScrollableTextWidgetState
       transposeSemitones: transposeSemitones,
     );
 
-    _schedulePostFrame(_updatePositionState);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) {
+        return;
+      }
+
+      final nextIsAtStart = _scrollController.offset <= 1.0;
+      final nextIsAtEnd = _scrollController.position.maxScrollExtent <= 0.0
+          ? true
+          : _scrollController.offset >=
+                (_scrollController.position.maxScrollExtent - 1.0);
+
+      if (model.isAtStart != nextIsAtStart || model.isAtEnd != nextIsAtEnd) {
+        _updatePositionState();
+      }
+    });
 
     return NotificationListener<ScrollNotification>(
       onNotification: (scrollNotification) {
@@ -224,10 +233,7 @@ class _AutoScrollableTextWidgetState
         padding: const EdgeInsets.all(12.0),
         child: SingleChildScrollView(
           controller: _scrollController,
-          child: SongTextRenderer(
-            song: song,
-            fontSize: model.textFontSize,
-          ),
+          child: SongTextRenderer(song: song, fontSize: model.textFontSize),
         ),
       ),
     );

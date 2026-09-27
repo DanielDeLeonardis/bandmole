@@ -10,6 +10,14 @@ BandMole is a Flutter application designed for musicians and performers to displ
 
 ---
 
+## Current Implementation Status
+
+BandMole is currently in the Release 1 / Songs Panel prototype phase. The shipped app includes a recursive song-library flow with persisted root-directory selection, Android Storage Access Framework support, UTF-8 decoding safeguards, responsive lyric scrolling, theme persistence, and declarative routing.
+
+The later feature areas — Song Groups, ChordPro Editor, Song Charts, Metadata, and Data Import/Export — are still part of the planned roadmap rather than implemented in the current codebase.
+
+---
+
 ## Features
 
 - **Automated Lyrics Scrolling**:
@@ -46,7 +54,7 @@ BandMole is a Flutter application designed for musicians and performers to displ
 
 ## Architecture & Tech Stack
 
-- **Framework**: [Flutter](https://flutter.dev/) with the stable Flutter version recorded for reproducible builds and the project-pinned Dart SDK constraint `^3.13.1`
+- **Framework**: [Flutter](https://flutter.dev/) `3.47.1` pinned by `.fvmrc`, with the project-pinned Dart SDK constraint `^3.13.1`
 - **State Management**: [Flutter Riverpod](https://riverpod.dev/) (`flutter_riverpod` + `riverpod_annotation` / `riverpod_generator`)
 - **Navigation**: [GoRouter](https://pub.dev/packages/go_router) with `MaterialApp.router`
 - **Data Modeling**: [Freezed](https://pub.dev/packages/freezed) immutable state objects
@@ -123,7 +131,7 @@ lib/
 
 ### Prerequisites
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) matching the version recorded for the project; the current Dart SDK constraint is `^3.13.1`
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) `3.47.1` (or FVM using `.fvmrc`); the current Dart SDK constraint is `^3.13.1`
 - Supported desktop/mobile platform toolchain, for example Windows C++ build tools for Windows desktop
 
 ### Installation
@@ -162,6 +170,25 @@ Run static analysis:
 ```bash
 dart analyze
 ```
+
+Run feature branch coverage and enforce the 80% target:
+```powershell
+powershell -ExecutionPolicy Bypass -File tool/coverage.ps1
+```
+The gate requires LCOV `BRDA` branch records and exits clearly when the active
+collector only emits line coverage.
+
+Run the Release 1 integration workflow on a connected platform:
+```bash
+flutter test integration_test/release_1_workflow_test.dart -d windows
+flutter test integration_test/release_1_workflow_test.dart -d <android-device-id>
+```
+
+Android library access uses a persisted Storage Access Framework tree grant. The
+device workflow should select a shared-storage folder, verify nested song
+browsing and loading, force-stop and relaunch, then verify the same root remains
+available. Cancelled selections and revoked grants are surfaced as recoverable
+warnings and can be reselected through the folder button.
 
 ---
 

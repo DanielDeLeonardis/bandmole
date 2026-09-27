@@ -4,7 +4,7 @@
 
 This roadmap turns the full requirements into a release sequence that is easier to scan at a glance. It keeps the same feature ordering as the requirements document, but trims the detail down to release goals, dependencies, and completion signals.
 
-Each feature area is delivered as a separate release for the first-release platforms.
+Each feature area is delivered as a separate release for the first-release platforms. The current repository is a working Release 1 prototype, while the later releases remain planned feature work.
 
 ## Release Sequence
 

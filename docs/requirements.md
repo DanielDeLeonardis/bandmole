@@ -4,6 +4,8 @@
 
 BandMole is an offline-first song management and performance app for solo musicians and bands, with the primary focus on an individual musician. Core features must remain available when network access is not available. Network-enabled features should degrade gracefully to offline-only behavior.
 
+> Current implementation status: this repository already contains the initial Release 1 implementation for library browsing, persistent song-root selection, and lyric playback, while the later release sections describe future product work that is not yet implemented in the shipped app.
+
 ## Release Plan
 
 Each major feature area is planned as a separate release for the first-release platforms. Every release includes both user-facing success criteria and implementation-level acceptance checks.

@@ -6,7 +6,7 @@
 
 ## 1. Executive Summary
 
-BandMole is an offline-first Flutter application targeting Windows 10 and Android 10 first, with Linux and Web planned next, for managing, displaying, and smoothly auto-scrolling song lyrics and chord charts. The current codebase is organized around a small set of focused features: file selection and encoding validation, configurable auto-scrolling with transport playback controls, text customization, and persistent user themes.
+BandMole is an offline-first Flutter application targeting Windows 10 and Android 10 first, with Linux and Web planned next, for managing, displaying, and smoothly auto-scrolling song lyrics and chord charts. The current codebase implements the initial Release 1 flow: recursive song-library loading, persisted root-directory selection, platform-specific directory access on Android, UTF-8-safe decoding, auto-scrolling transport controls, text customization, and persistent user themes.
 
 The architecture blends Flutter Riverpod state management, Freezed immutable data models, and Flutter widget lifecycle hooks with platform abstractions for file picking and decoding.
 
@@ -14,7 +14,7 @@ Auto-scroll jump actions are unified into a single `AutoScrollableTextNotifier` 
 
 The codebase is organized in a feature-first structure under `lib/src/` with shared UI helpers in `core/` and feature folders for `lyrics_scroller`, `preferences`, and `song_loader`.
 
-The current implementation is the foundation for six planned release areas: Songs Panel, Song Groups, ChordPro Editor, Song Charts, Metadata, and Data Import and Export. The target architecture expands the current single-file loading flow into a recursively scanned song library with platform-specific directory access, persisted permissions or handles where supported, and explicit warning and broken-reference states.
+The current implementation is the Release 1 foundation for the broader roadmap: Song Groups, ChordPro Editor, Song Charts, Metadata, and Data Import and Export are still future work. The implemented architecture already includes a recursively scanned song library, persisted access state, and explicit warning handling for file and path problems.
 
 ---
 
