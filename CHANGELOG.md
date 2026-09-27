@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Release 1: Song Library & Lyrics Performance**:
+  - Implemented a song library workflow with persisted root-directory selection, in-app directory picking, and Android Storage Access Framework support for restoring and reusing a selected library folder.
+  - Added recursive song scanning from the selected root directory, filtered supported files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, `.txt`), and sorted results for stable library browsing.
+  - Added library persistence for the selected song root, active song, and expanded folders so the UI restores state across app restarts.
+  - Added UTF-8-safe song decoding with malformed-character fallback handling so plain-text and ChordPro files can be loaded without crashing on bad encodings.
+  - Added a `SongRepository` boundary for file picking and read operations, with platform-specific implementations for Windows and Android, and a view/controller split to keep `MainView` focused on layout and navigation.
+  - Added the `SongLoaderController`/`SongLoaderEffectsListener` flow for loading songs, surfacing warnings, and routing to the lyrics view after a successful load.
+  - Added the lyrics-performance screen with play/stop toggling, text size and scroll speed controls, jump-to-start/end behavior, boundary detection, and viewport-aware resizing logic.
+  - Added a responsive library layout with a tabbed presentation on narrower screens and a desktop-friendly tree view for browsing the song collection.
+  - Added global theme configuration with persisted preferences and a declarative `GoRouter` navigation stack using `MaterialApp.router`.
+  - Added feature-first project organization under `lib/src/` with `song_loader`, `lyrics_scroller`, and `preferences` modules to align the codebase with the cross-cutting architecture requirements.
+  - Added lifecycle-safe state handling for snackbars, route transitions, and scroll cleanup through post-frame callbacks so provider updates do not run against a deactivated widget tree.
+
 ### Fixed
 - **Static Analysis**:
   - Removed unused optional constructor parameters (`type`, `label`) from `_SongSectionBuilder` in `lib/src/features/lyrics_scroller/domain/song_formatting.dart` to resolve `unused_element_parameter` analyzer warnings.

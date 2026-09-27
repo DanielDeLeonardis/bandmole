@@ -1,0 +1,38 @@
+{
+  "@@locale": "en",
+  "appTitle": "BandMole",
+  "preferences": "Preferences",
+  "chooseSongLibraryFolder": "Choose song library folder",
+  "selectSongLibraryFolder": "Select song library folder",
+  "searchSongsAndFolders": "Search songs and folders",
+  "clearSearch": "Clear search",
+  "caseSensitiveSearchOn": "Case-sensitive search on",
+  "caseSensitiveSearchOff": "Case-sensitive search off",
+  "selectSongToView": "Select a song to view it here.",
+  "noMatchingSongsOrFolders": "No matching songs or folders.",
+  "noSongsFound": "No songs found.",
+  "noLibrarySelected": "No library selected",
+  "rootLabel": "Root: {path}",
+  "@rootLabel": {"placeholders": {"path": {"type": "String"}}},
+  "songsTab": "Songs",
+  "songTab": "Song",
+  "songSelectionUnsupported": "Song selection is not supported on this platform.",
+  "unableToLoadSong": "Unable to load song.",
+  "noSongSelected": "No song selected.",
+  "encodingIssues": "Song contents has encoding issues. Please review.",
+  "libraryUnavailable": "The song library is unavailable. Choose it again."
+  ,"decreaseTextFontSize": "Decrease text font size"
+  ,"increaseTextFontSize": "Increase text font size"
+  ,"transposeDown": "Transpose down one semitone"
+  ,"resetTransposition": "Reset transposition"
+  ,"transposeUp": "Transpose up one semitone"
+  ,"goToStart": "Go to start"
+  ,"stopScrolling": "Stop scrolling"
+  ,"startScrolling": "Start scrolling"
+  ,"goToEnd": "Go to end"
+  ,"decreaseScrollSpeed": "Decrease scroll speed"
+  ,"increaseScrollSpeed": "Increase scroll speed"
+  ,"textFontSize": "Text font size"
+  ,"transposeSemitones": "Transpose semitones"
+  ,"scrollSpeed": "Scroll speed"
+}
