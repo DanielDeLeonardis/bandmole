@@ -7,7 +7,14 @@ import 'package:bandmole/src/features/preferences/presentation/views/preferences
 import 'package:bandmole/src/features/song_loader/domain/song.dart';
 import 'package:bandmole/src/features/song_loader/domain/song_file.dart';
 import 'package:bandmole/src/features/song_loader/domain/song_repository.dart';
+import 'package:bandmole/src/features/song_loader/presentation/providers/song_loader_controller.dart';
 import 'package:bandmole/src/features/song_loader/presentation/providers/song_repository_provider.dart';
+import 'package:bandmole/src/features/song_groups/domain/gig.dart';
+import 'package:bandmole/src/features/song_groups/domain/gig_repository.dart';
+import 'package:bandmole/src/features/song_groups/domain/gig_song.dart';
+import 'package:bandmole/src/features/song_groups/domain/song_set.dart';
+import 'package:bandmole/src/features/song_groups/presentation/providers/gig_repository_provider.dart';
+import 'package:bandmole/src/features/song_groups/presentation/providers/gigs_controller.dart';
 import 'package:bandmole/src/features/song_loader/presentation/views/main_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -96,8 +103,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Choose song library folder'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
 
       final searchField = find.byType(TextField);
       await tester.enterText(searchField, 'girl');
@@ -351,7 +357,7 @@ void main() {
     await tester.tap(find.text('song.txt'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(TabBar), findsNothing);
+    expect(find.byType(TabBar), findsOneWidget);
     expect(find.text('Songs'), findsNothing);
     expect(find.text('song.txt'), findsOneWidget);
     expect(find.text('Selected song content'), findsOneWidget);
@@ -531,6 +537,326 @@ void main() {
     expect(find.text('No songs found.'), findsOneWidget);
     expect(find.text('Open song'), findsNothing);
   });
+
+  testWidgets(
+    'MainView navigates gig songs and closes the set on narrow layouts',
+    (WidgetTester tester) async {
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(420, 800));
+
+      final library = (await tester.runAsync(() async {
+        final directory = await Directory.systemTemp.createTemp(
+          'bandmole_main_view_gig_test',
+        );
+        await File('${directory.path}${Platform.pathSeparator}song.txt')
+            .writeAsString('A song');
+        return directory;
+      }))!;
+      addTearDown(() => tester.runAsync(() => library.delete(recursive: true)));
+
+      final repository = _MemoryGigRepository([
+        Gig(
+          id: 'gig-1',
+          title: 'Show',
+          sets: const [
+            SongSet(
+              id: 'set-1',
+              title: 'Set 1',
+              songs: [GigSong(id: 'song-1', relativePath: 'song.txt')],
+            ),
+          ],
+        ),
+      ]);
+      final selectedFile = SongFile(
+        path: '${library.path}${Platform.pathSeparator}song.txt',
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            gigRepositoryProvider.overrideWithValue(repository),
+            songRepositoryProvider.overrideWithValue(
+              _FakeSongRepository(
+                selectedFile: selectedFile,
+                songToLoad: Song(
+                  file: selectedFile,
+                  text: 'Selected song content',
+                  isMalformed: false,
+                ),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            home: MainView(directoryPicker: () async => library.path),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.tap(find.byTooltip('Choose song library folder'));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await tester.tap(find.text('song.txt'));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(MainView)),
+        listen: false,
+      );
+      await container
+          .read(gigsControllerProvider.notifier)
+          .loadGigs(
+            rootDirectory: library.path,
+            availableRelativePaths: {'song.txt'},
+          );
+      await tester.pump(const Duration(milliseconds: 500));
+
+      container.read(gigsControllerProvider.notifier).selectGig('gig-1');
+      await tester.pump(const Duration(milliseconds: 500));
+
+      container.read(gigsControllerProvider.notifier).selectSong(0, 0);
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(
+        find.byKey(const ValueKey<String>('song_view_active')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('gig_prev_song_button')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey<String>('gig_next_song_button')),
+        findsOneWidget,
+      );
+
+      final closeGigSetButton = find.byKey(
+        const ValueKey<String>('close_gig_set_button'),
+      );
+      await tester.tap(closeGigSetButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
+    },
+  );
+
+  testWidgets('MainView keeps a gig song active until Close set is pressed', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(420, 800));
+
+    final library = (await tester.runAsync(() async {
+      final directory = await Directory.systemTemp.createTemp(
+        'bandmole_main_view_tab_switch_test',
+      );
+      await File('${directory.path}${Platform.pathSeparator}first.txt')
+          .writeAsString('First song');
+      await File('${directory.path}${Platform.pathSeparator}second.txt')
+          .writeAsString('Second song');
+      return directory;
+    }))!;
+    addTearDown(() => tester.runAsync(() => library.delete(recursive: true)));
+
+    final repository = _MemoryGigRepository([
+      Gig(
+        id: 'gig-1',
+        title: 'Show',
+        sets: const [
+          SongSet(
+            id: 'set-1',
+            title: 'Set 1',
+            songs: [GigSong(id: 'song-1', relativePath: 'first.txt')],
+          ),
+        ],
+      ),
+    ]);
+    final firstFile = SongFile(
+      path: '${library.path}${Platform.pathSeparator}first.txt',
+    );
+
+    final repositoryUnderTest = _FakeSongRepository(
+      selectedFile: firstFile,
+      songToLoad: Song(
+        file: firstFile,
+        text: 'First song content',
+        isMalformed: false,
+      ),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          gigRepositoryProvider.overrideWithValue(repository),
+          songRepositoryProvider.overrideWithValue(repositoryUnderTest),
+        ],
+        child: MaterialApp(
+          home: MainView(directoryPicker: () async => library.path),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
+    await tester.tap(find.byTooltip('Choose song library folder'));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MainView)),
+      listen: false,
+    );
+    await container
+        .read(gigsControllerProvider.notifier)
+        .loadGigs(
+          rootDirectory: library.path,
+          availableRelativePaths: {'first.txt', 'second.txt'},
+        );
+    await tester.pump(const Duration(milliseconds: 500));
+
+    await tester.tap(find.byKey(const ValueKey<String>('gigs_tab')));
+    await tester.pump(const Duration(milliseconds: 500));
+
+    container.read(gigsControllerProvider.notifier).selectSong(0, 0);
+    await container
+        .read(songLoaderControllerProvider.notifier)
+        .pickAndLoadSong(firstFile);
+    await tester.pumpAndSettle();
+
+    expect(container.read(gigsControllerProvider).isSetOpen, isTrue);
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
+    expect(find.byType(SongView), findsOneWidget);
+    expect(
+      tester.widget<SongView>(find.byType(SongView)).gigInfo,
+      'Show \u2022 Set 1 \u2022 1/1',
+    );
+    final closeSetFinder = find.byKey(
+      const ValueKey<String>('close_gig_set_button'),
+    );
+    expect(tester.widget<TextButton>(closeSetFinder).onPressed, isNotNull);
+    final tabGuard = find.byKey(const ValueKey<String>('panel_tabs_guard'));
+    expect(tester.widget<AbsorbPointer>(tabGuard).absorbing, isTrue);
+    expect(
+      tester.widget<TabBarView>(find.byType(TabBarView)).physics,
+      isA<NeverScrollableScrollPhysics>(),
+    );
+
+    await tester.tap(find.text('Songs'), warnIfMissed: false);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
+    expect(container.read(gigsControllerProvider).isSetOpen, isTrue);
+
+    await tester.tap(closeSetFinder);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(container.read(gigsControllerProvider).isSetOpen, isFalse);
+    expect(container.read(gigsControllerProvider).activeSong, isNull);
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
+    expect(tester.widget<AbsorbPointer>(tabGuard).absorbing, isFalse);
+    expect(tester.widget<TextButton>(closeSetFinder).onPressed, isNull);
+
+    await tester.tap(find.byKey(const ValueKey<String>('gigs_tab')));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 2);
+  });
+  testWidgets('MainView locks desktop panels while a gig song is active', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1280, 800));
+    final library = await _createSongLibrary(tester, {'song.txt': 'A song'});
+    addTearDown(() => tester.runAsync(() => library.delete(recursive: true)));
+    final selectedFile = SongFile(
+      path: '${library.path}${Platform.pathSeparator}song.txt',
+    );
+    final repository = _MemoryGigRepository([
+      Gig(
+        id: 'gig-1',
+        title: 'Show',
+        sets: const [
+          SongSet(
+            id: 'set-1',
+            title: 'Set 1',
+            songs: [GigSong(id: 'song-1', relativePath: 'song.txt')],
+          ),
+        ],
+      ),
+    ]);
+    final semantics = tester.ensureSemantics();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          gigRepositoryProvider.overrideWithValue(repository),
+          songRepositoryProvider.overrideWithValue(
+            _FakeSongRepository(
+              selectedFile: selectedFile,
+              songToLoad: Song(
+                file: selectedFile,
+                text: 'Selected song content',
+                isMalformed: false,
+              ),
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: MainView()),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(MainView)),
+      listen: false,
+    );
+    await container
+        .read(gigsControllerProvider.notifier)
+        .loadGigs(
+          rootDirectory: library.path,
+          availableRelativePaths: {'song.txt'},
+        );
+    await tester.pump();
+    container.read(gigsControllerProvider.notifier).selectSong(0, 0);
+    await container
+        .read(songLoaderControllerProvider.notifier)
+        .pickAndLoadSong(selectedFile);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(container.read(gigsControllerProvider).isSetOpen, isTrue);
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
+    final tabGuard = find.byKey(const ValueKey<String>('panel_tabs_guard'));
+    expect(tester.widget<AbsorbPointer>(tabGuard).absorbing, isTrue);
+    final libraryGuard = find.byKey(
+      const ValueKey<String>('song_library_guard'),
+    );
+    expect(tester.widget<AbsorbPointer>(libraryGuard).absorbing, isTrue);
+    expect(find.byType(SongView), findsOneWidget);
+    expect(
+      tester.widget<SongView>(find.byType(SongView)).gigInfo,
+      'Show \u2022 Set 1 \u2022 1/1',
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('gigs_tab')),
+      warnIfMissed: false,
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 0);
+    expect(container.read(gigsControllerProvider).isSetOpen, isTrue);
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('close_gig_set_button')),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(container.read(gigsControllerProvider).isSetOpen, isFalse);
+    expect(tester.widget<AbsorbPointer>(libraryGuard).absorbing, isFalse);
+    expect(tester.widget<AbsorbPointer>(tabGuard).absorbing, isFalse);
+
+    await tester.tap(find.byKey(const ValueKey<String>('gigs_tab')));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
+    semantics.dispose();
+  });
 }
 
 Future<Directory> _createSongLibrary(
@@ -570,5 +896,25 @@ class _FakeSongRepository implements SongRepository {
   @override
   Future<SongFile?> pickSongFile() async {
     return selectedFile;
+  }
+}
+
+class _MemoryGigRepository implements GigRepository {
+  _MemoryGigRepository([List<Gig> gigs = const []]) : gigs = List.of(gigs);
+
+  final List<Gig> gigs;
+
+  @override
+  Future<List<Gig>> loadGigs() async => List.of(gigs);
+
+  @override
+  Future<void> saveGig(Gig gig) async {
+    gigs.removeWhere((candidate) => candidate.id == gig.id);
+    gigs.add(gig);
+  }
+
+  @override
+  Future<void> deleteGig(String gigId) async {
+    gigs.removeWhere((gig) => gig.id == gigId);
   }
 }

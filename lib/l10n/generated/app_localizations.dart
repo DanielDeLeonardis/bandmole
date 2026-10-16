@@ -297,6 +297,270 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scroll speed'**
   String get scrollSpeed;
+
+  /// No description provided for @gigsTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Gigs'**
+  String get gigsTab;
+
+  /// No description provided for @gigs.
+  ///
+  /// In en, this message translates to:
+  /// **'Gigs'**
+  String get gigs;
+
+  /// No description provided for @selectGig.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Gig'**
+  String get selectGig;
+
+  /// No description provided for @createGig.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Gig'**
+  String get createGig;
+
+  /// No description provided for @editGig.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Gig'**
+  String get editGig;
+
+  /// No description provided for @deleteGig.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Gig'**
+  String get deleteGig;
+
+  /// No description provided for @deleteGigConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this gig? Song files will remain untouched.'**
+  String get deleteGigConfirmation;
+
+  /// No description provided for @gigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Gig Title'**
+  String get gigTitle;
+
+  /// No description provided for @gigTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Gig title is required'**
+  String get gigTitleRequired;
+
+  /// No description provided for @gigDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get gigDate;
+
+  /// No description provided for @gigVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Venue'**
+  String get gigVenue;
+
+  /// No description provided for @gigNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get gigNotes;
+
+  /// No description provided for @gigStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Time'**
+  String get gigStartTime;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @sets.
+  ///
+  /// In en, this message translates to:
+  /// **'Sets'**
+  String get sets;
+
+  /// No description provided for @addSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Set'**
+  String get addSet;
+
+  /// No description provided for @renameSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Set'**
+  String get renameSet;
+
+  /// No description provided for @deleteSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Set'**
+  String get deleteSet;
+
+  /// No description provided for @setTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Title'**
+  String get setTitle;
+
+  /// No description provided for @setTitleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Set title is required'**
+  String get setTitleRequired;
+
+  /// No description provided for @setNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number}'**
+  String setNumber(int number);
+
+  /// No description provided for @noGigsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No gigs found. Create one to get started.'**
+  String get noGigsFound;
+
+  /// No description provided for @noSetsInGig.
+  ///
+  /// In en, this message translates to:
+  /// **'No sets in this gig.'**
+  String get noSetsInGig;
+
+  /// No description provided for @emptySetDropSongsHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty set. Drop songs here or select from Songs panel.'**
+  String get emptySetDropSongsHere;
+
+  /// No description provided for @addToSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Set'**
+  String get addToSet;
+
+  /// No description provided for @addToCurrentSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to current set'**
+  String get addToCurrentSet;
+
+  /// No description provided for @relinkSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-link Song'**
+  String get relinkSong;
+
+  /// No description provided for @removeSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Song'**
+  String get removeSong;
+
+  /// No description provided for @moveSongUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move song up'**
+  String get moveSongUp;
+
+  /// No description provided for @moveSongDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move song down'**
+  String get moveSongDown;
+
+  /// No description provided for @moveSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move set up'**
+  String get moveSetUp;
+
+  /// No description provided for @moveSetDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move set down'**
+  String get moveSetDown;
+
+  /// No description provided for @brokenSongTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Song file missing from disk: {path}'**
+  String brokenSongTooltip(String path);
+
+  /// No description provided for @duplicateGigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A gig with this title already exists.'**
+  String get duplicateGigTitle;
+
+  /// No description provided for @duplicateSetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A set with this title already exists in this gig.'**
+  String get duplicateSetTitle;
+
+  /// No description provided for @duplicateSongInGig.
+  ///
+  /// In en, this message translates to:
+  /// **'This song is already in this gig.'**
+  String get duplicateSongInGig;
+
+  /// No description provided for @gigMustHaveAtLeastOneSet.
+  ///
+  /// In en, this message translates to:
+  /// **'A gig must contain at least one set.'**
+  String get gigMustHaveAtLeastOneSet;
+
+  /// No description provided for @nextSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Next song'**
+  String get nextSong;
+
+  /// No description provided for @previousSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous song'**
+  String get previousSong;
+
+  /// No description provided for @closeSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Close set'**
+  String get closeSet;
+
+  /// No description provided for @unsupportedSongFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The song file type is not supported.'**
+  String get unsupportedSongFile;
+
+  /// No description provided for @setNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Set not found in this gig.'**
+  String get setNotFound;
 }
 
 class _AppLocalizationsDelegate

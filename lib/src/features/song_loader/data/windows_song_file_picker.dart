@@ -7,19 +7,27 @@ const Map<String, String> chordProSongFileFilters = {
 };
 
 class WindowsSongFilePicker implements SongFilePicker {
-  WindowsSongFilePicker();
+  WindowsSongFilePicker({String? Function()? selectSongPath})
+    : _selectSongPath = selectSongPath;
+
+  final String? Function()? _selectSongPath;
 
   @override
   Future<SongFile?> pickSongFile() async {
-    final filePicker = OpenFilePicker()
-      ..filterSpecification = chordProSongFileFilters
-      ..title = 'Select a song file';
-
-    final selectedFile = filePicker.getFile();
-    if (selectedFile == null) {
+    final selectSongPath = _selectSongPath;
+    final String? selectedPath;
+    if (selectSongPath != null) {
+      selectedPath = selectSongPath();
+    } else {
+      final filePicker = OpenFilePicker()
+        ..filterSpecification = chordProSongFileFilters
+        ..title = 'Select a song file';
+      selectedPath = filePicker.getFile()?.path;
+    }
+    if (selectedPath == null) {
       return null;
     }
 
-    return SongFile(path: selectedFile.path);
+    return SongFile(path: selectedPath);
   }
 }

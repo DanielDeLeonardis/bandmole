@@ -4,7 +4,7 @@
 
 BandMole is an offline-first song management and performance application for solo musicians and bands, with the primary emphasis on the individual musician workflow. The product must remain useful without network access and should degrade gracefully when network-backed features are unavailable.
 
-> Current implementation status: the codebase currently delivers the Release 1 song-library and lyrics-performance prototype. The later releases in this document describe the broader product roadmap rather than functions that are already shipped in the application.
+> Current implementation status: Releases 1 (Songs Panel and lyrics performance) and 2 (Song Groups) are implemented. Releases 3–6 describe planned product work; platform-specific and coverage verification limits are recorded in [Release 2 Technical Debt](release_2_tech_debt.md).
 
 ## 2. Product Goals
 
@@ -97,6 +97,8 @@ Requirements:
 - Prevent duplicate songs across a gig.
 - If a song is missing from disk, the gig remains editable and shows a broken link highlighted in red with an explanatory tooltip.
 - Users can re-link a broken song to any supported song file or remove it.
+- Opening a gig song enters set mode. While active, panel tabs and the Songs library cannot be used; **Close set** exits set mode and restores normal navigation.
+- The active song display identifies the gig, set, and position with readable separators.
 
 Acceptance:
 - Gigs and sets persist across restarts.
@@ -104,6 +106,7 @@ Acceptance:
 - Set titles can be renamed as long as they remain unique within the gig.
 - Navigation continues from one set to the next set automatically, and backward from the start of one set into the previous set.
 - Gigs with missing songs remain editable while broken links are shown.
+- Closing a set clears the active set/song navigation state; next/previous is available only while a gig song is active.
 
 Failure cases:
 - Duplicate songs across a gig are rejected.

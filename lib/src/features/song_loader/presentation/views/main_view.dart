@@ -17,6 +17,11 @@ import 'package:filepicker_windows/filepicker_windows.dart' as windows_picker;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:bandmole/l10n/generated/app_localizations.dart';
 import 'package:bandmole/l10n/app_localizations_fallback.dart';
+import 'package:bandmole/src/features/song_groups/domain/gig_song.dart';
+import 'package:bandmole/src/features/song_groups/domain/song_group_utils.dart';
+import 'package:bandmole/src/features/song_groups/presentation/providers/gigs_controller.dart';
+import 'package:bandmole/src/features/song_groups/presentation/song_group_error_localizer.dart';
+import 'package:bandmole/src/features/song_groups/presentation/views/gigs_panel_view.dart';
 
 typedef SongLibraryDirectoryPicker = Future<String?> Function();
 
@@ -30,7 +35,7 @@ class MainView extends ConsumerStatefulWidget {
 }
 
 class _MainViewState extends ConsumerState<MainView>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const _wideLayoutBreakpoint = 960.0;
   static const _rootDirPrefsKey = 'song_root_directory';
   static const _selectedSongPrefsKey = 'selected_song_path';
@@ -40,6 +45,7 @@ class _MainViewState extends ConsumerState<MainView>
   String? _selectedSongPath;
   Song? _selectedSong;
   late final TabController _panelTabController;
+  late final TabController _widePanelTabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _caseSensitiveSearch = false;
@@ -54,7 +60,8 @@ class _MainViewState extends ConsumerState<MainView>
   @override
   void initState() {
     super.initState();
-    _panelTabController = TabController(length: 2, vsync: this);
+    _panelTabController = TabController(length: 3, vsync: this);
+    _widePanelTabController = TabController(length: 2, vsync: this);
     _loadPersistedState();
   }
 
@@ -62,12 +69,15 @@ class _MainViewState extends ConsumerState<MainView>
   void dispose() {
     _searchController.dispose();
     _panelTabController.dispose();
+    _widePanelTabController.dispose();
     super.dispose();
   }
 
   void _onSongLoaded(Song song) {
     setState(() => _selectedSong = song);
-    if (MediaQuery.sizeOf(context).width < _wideLayoutBreakpoint) {
+    if (MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint) {
+      _widePanelTabController.animateTo(0);
+    } else {
       _panelTabController.animateTo(1);
     }
   }
@@ -184,12 +194,25 @@ class _MainViewState extends ConsumerState<MainView>
     );
   }
 
-  void _onSongTapped(SongFile file) {
+  void _onSongTapped(SongFile file, {bool fromGig = false}) {
+    if (!fromGig && ref.read(gigsControllerProvider).isSetOpen) {
+      return;
+    }
     setState(() {
       _selectedSongPath = file.path;
     });
+    if (!fromGig) {
+      ref.read(gigsControllerProvider.notifier).clearActiveSong();
+    }
     _persistSelectedSong(file.path);
     ref.read(songLoaderControllerProvider.notifier).pickAndLoadSong(file);
+  }
+
+  void _closeGigSet() {
+    ref.read(gigsControllerProvider.notifier).closeSet();
+    if (MediaQuery.sizeOf(context).width < _wideLayoutBreakpoint) {
+      _panelTabController.animateTo(0);
+    }
   }
 
   String _relativeSongPath(SongFile song) {
@@ -304,18 +327,140 @@ class _MainViewState extends ConsumerState<MainView>
     );
   }
 
+  Future<void> _addSongToCurrentSet(String relativePath) async {
+    final gigsState = ref.read(gigsControllerProvider);
+    final gig = gigsState.selectedGig;
+    final set = gigsState.selectedSet;
+    if (gig == null || set == null) return;
+
+    try {
+      await ref
+          .read(gigsControllerProvider.notifier)
+          .addSongToSet(
+            gig.id,
+            set.id,
+            relativePath,
+            rootDirectory: _rootDir,
+            fileExistsCheck: _songExistsInLibrary,
+          );
+    } on SongGroupException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(songGroupErrorMessage(_l10n, e)),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
+  bool _songExistsInLibrary(String relativePath) {
+    return _songs.any(
+      (song) =>
+          SongGroupUtils.arePathsEqual(_relativeSongPath(song), relativePath),
+    );
+  }
+
+  SongFile _findSongFileByRelativePath(String relativePath) {
+    final norm = SongGroupUtils.normalizePath(relativePath).toLowerCase();
+    for (final song in _songs) {
+      if (SongGroupUtils.normalizePath(_relativeSongPath(song)).toLowerCase() ==
+          norm) {
+        return song;
+      }
+    }
+    final fullPath = _resolveFullPath(relativePath);
+    return SongFile(path: fullPath, displayPath: relativePath);
+  }
+
+  String _resolveFullPath(String relativePath) {
+    final root = _rootDir;
+    if (root == null || root.isEmpty) return relativePath;
+    return root.endsWith('/') || root.endsWith('\\')
+        ? '$root$relativePath'
+        : '$root${Platform.pathSeparator}$relativePath';
+  }
+
+  void _onSongSelectedFromGig(GigSong gigSong, int setIndex, int songIndex) {
+    final songFile = _findSongFileByRelativePath(gigSong.relativePath);
+    _onSongTapped(songFile, fromGig: true);
+  }
+
+  void _handleNextSongInGig() {
+    final nextSong = ref
+        .read(gigsControllerProvider.notifier)
+        .navigateToNextSong();
+    if (nextSong != null) {
+      final state = ref.read(gigsControllerProvider);
+      _onSongSelectedFromGig(
+        nextSong,
+        state.activeSetIndex ?? 0,
+        state.activeSongIndex ?? 0,
+      );
+    }
+  }
+
+  void _handlePreviousSongInGig() {
+    final prevSong = ref
+        .read(gigsControllerProvider.notifier)
+        .navigateToPreviousSong();
+    if (prevSong != null) {
+      final state = ref.read(gigsControllerProvider);
+      _onSongSelectedFromGig(
+        prevSong,
+        state.activeSetIndex ?? 0,
+        state.activeSongIndex ?? 0,
+      );
+    }
+  }
+
   Widget _buildSongTile(SongFile file) {
     final isSelected = _selectedSongPath == file.path;
-    return ListTile(
+    final relativePath = _relativeSongPath(file);
+    final gigsState = ref.watch(gigsControllerProvider);
+    final selectedGig = gigsState.selectedGig;
+    final setModeActive = gigsState.isSetOpen;
+
+    final tile = ListTile(
       key: ValueKey<String>('song:${file.path}'),
-      contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 16),
+      contentPadding: const EdgeInsetsDirectional.only(start: 24, end: 8),
+      enabled: !setModeActive,
       tileColor: isSelected
           ? Theme.of(context).colorScheme.primaryContainer
           : null,
       leading: Icon(file.isChordPro ? Icons.music_note : Icons.text_snippet),
-      title: Text(_relativeSongPath(file).split('/').last),
+      title: Text(relativePath.split('/').last),
+      trailing: selectedGig != null && !setModeActive
+          ? IconButton(
+              key: ValueKey<String>('add_song_btn_${file.path}'),
+              icon: const Icon(Icons.playlist_add),
+              tooltip: _l10n.addToCurrentSet,
+              onPressed: () => _addSongToCurrentSet(relativePath),
+            )
+          : null,
       selected: isSelected,
-      onTap: () => _onSongTapped(file),
+      onTap: setModeActive ? null : () => _onSongTapped(file),
+    );
+
+    return Draggable<SongFile>(
+      data: file,
+      feedback: Material(
+        elevation: 4,
+        borderRadius: BorderRadius.circular(8),
+        color: Theme.of(context).colorScheme.primaryContainer,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            relativePath.split('/').last,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
+        ),
+      ),
+      childWhenDragging: Opacity(opacity: 0.5, child: tile),
+      child: tile,
     );
   }
 
@@ -391,22 +536,66 @@ class _MainViewState extends ConsumerState<MainView>
 
   Widget _buildSongPanel() {
     final l10n = _l10n;
-    final song = _selectedSong;
-    if (song?.text == null) {
+    final selectedSong = _selectedSong;
+    if (selectedSong == null || selectedSong.text == null) {
       return Center(child: Text(l10n.selectSongToView));
     }
 
+    final gigsState = ref.watch(gigsControllerProvider);
+    final selectedGig = gigsState.selectedGig;
+    final activeSetIndex = gigsState.activeSetIndex;
+    final activeSet =
+        selectedGig != null &&
+            activeSetIndex != null &&
+            activeSetIndex >= 0 &&
+            activeSetIndex < selectedGig.sets.length
+        ? selectedGig.sets[activeSetIndex]
+        : null;
+    final activeSongIndex = gigsState.activeSongIndex;
+    final hasActiveGigSong =
+        selectedGig != null &&
+        activeSet != null &&
+        activeSongIndex != null &&
+        activeSongIndex >= 0 &&
+        activeSongIndex < activeSet.songs.length;
+    final setModeActive = gigsState.isSetOpen;
+    final gigInfo = hasActiveGigSong && setModeActive
+        ? '${selectedGig.title} \u2022 ${activeSet.title} \u2022 ${activeSongIndex + 1}/${activeSet.songs.length}'
+        : null;
+
     return SongView(
-      key: ValueKey<String>(song!.file.path),
-      text: song.text!,
-      canTranspose: song.canTranspose,
+      key: const ValueKey<String>('song_view_active'),
+      text: selectedSong.text!,
+      canTranspose: selectedSong.canTranspose,
       embedded: true,
+      onPreviousSong: setModeActive && hasActiveGigSong
+          ? _handlePreviousSongInGig
+          : null,
+      onNextSong: setModeActive && hasActiveGigSong
+          ? _handleNextSongInGig
+          : null,
+      canGoPrevious: setModeActive && gigsState.canNavigatePrevious,
+      canGoNext: setModeActive && gigsState.canNavigateNext,
+      gigInfo: gigInfo,
+      showGigNavigation: setModeActive && hasActiveGigSong,
+    );
+  }
+
+  Widget _buildGigsPanel() {
+    return GigsPanelView(
+      librarySongs: _songs,
+      rootDirectory: _rootDir,
+      selectedLibrarySong: _songs
+          .where((song) => song.path == _selectedSongPath)
+          .firstOrNull,
+      onSongSelected: _onSongSelectedFromGig,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = _l10n;
+    final setModeActive = ref.watch(gigsControllerProvider).isSetOpen;
     final songTree = _buildSongTree();
     final filteredTree = _filterSongDirectory(songTree, inheritedMatch: false);
     final treeEntries = filteredTree == null
@@ -462,12 +651,33 @@ class _MainViewState extends ConsumerState<MainView>
       ),
     );
 
+    final interactiveLibraryPanel = ExcludeFocus(
+      excluding: setModeActive,
+      child: Opacity(
+        opacity: setModeActive ? 0.55 : 1,
+        child: AbsorbPointer(
+          key: const ValueKey<String>('song_library_guard'),
+          absorbing: setModeActive,
+          child: libraryPanel,
+        ),
+      ),
+    );
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
             SongLoaderEffectsListener(onSongLoaded: _onSongLoaded),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton.icon(
+                key: const ValueKey<String>('close_gig_set_button'),
+                onPressed: setModeActive ? _closeGigSet : null,
+                icon: const Icon(Icons.close),
+                label: Text(l10n.closeSet),
+              ),
+            ),
             const SizedBox(height: 10.0),
             Expanded(
               child: LayoutBuilder(
@@ -479,26 +689,83 @@ class _MainViewState extends ConsumerState<MainView>
                     );
                     return Row(
                       children: [
-                        SizedBox(width: libraryWidth, child: libraryPanel),
+                        SizedBox(
+                          width: libraryWidth,
+                          child: interactiveLibraryPanel,
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildSongPanel()),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              ExcludeFocus(
+                                excluding: setModeActive,
+                                child: AbsorbPointer(
+                                  key: const ValueKey<String>(
+                                    'panel_tabs_guard',
+                                  ),
+                                  absorbing: setModeActive,
+                                  child: TabBar(
+                                    controller: _widePanelTabController,
+                                    tabs: [
+                                      Tab(text: l10n.songTab),
+                                      Tab(
+                                        key: const ValueKey<String>('gigs_tab'),
+                                        text: l10n.gigsTab,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: TabBarView(
+                                  controller: _widePanelTabController,
+                                  physics: setModeActive
+                                      ? const NeverScrollableScrollPhysics()
+                                      : null,
+                                  children: [
+                                    _buildSongPanel(),
+                                    _buildGigsPanel(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ],
                     );
                   }
 
                   return Column(
                     children: [
-                      TabBar(
-                        controller: _panelTabController,
-                        tabs: [
-                          Tab(text: l10n.songsTab),
-                          Tab(text: l10n.songTab),
-                        ],
+                      ExcludeFocus(
+                        excluding: setModeActive,
+                        child: AbsorbPointer(
+                          key: const ValueKey<String>('panel_tabs_guard'),
+                          absorbing: setModeActive,
+                          child: TabBar(
+                            controller: _panelTabController,
+                            tabs: [
+                              Tab(text: l10n.songsTab),
+                              Tab(text: l10n.songTab),
+                              Tab(
+                                key: const ValueKey<String>('gigs_tab'),
+                                text: l10n.gigsTab,
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                       Expanded(
                         child: TabBarView(
                           controller: _panelTabController,
-                          children: [libraryPanel, _buildSongPanel()],
+                          physics: setModeActive
+                              ? const NeverScrollableScrollPhysics()
+                              : null,
+                          children: [
+                            interactiveLibraryPanel,
+                            _buildSongPanel(),
+                            _buildGigsPanel(),
+                          ],
                         ),
                       ),
                     ],

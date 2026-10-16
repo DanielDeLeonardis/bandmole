@@ -1,2 +1,2 @@
-flutter test --coverage
-dart run tool/check_coverage.dart
+flutter test --coverage --branch-coverage
+dart run tool/check_coverage.dart

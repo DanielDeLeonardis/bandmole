@@ -74,4 +74,97 @@ class EnglishAppLocalizations extends AppLocalizations {
   String get transposeSemitones => 'Transpose semitones';
   @override
   String get scrollSpeed => 'Scroll speed';
+  @override
+  String get gigsTab => 'Gigs';
+  @override
+  String get gigs => 'Gigs';
+  @override
+  String get selectGig => 'Select Gig';
+  @override
+  String get createGig => 'Create Gig';
+  @override
+  String get editGig => 'Edit Gig';
+  @override
+  String get deleteGig => 'Delete Gig';
+  @override
+  String get deleteGigConfirmation =>
+      'Are you sure you want to delete this gig? Song files will remain untouched.';
+  @override
+  String get gigTitle => 'Gig Title';
+  @override
+  String get gigTitleRequired => 'Gig title is required';
+  @override
+  String get gigDate => 'Date';
+  @override
+  String get gigVenue => 'Venue';
+  @override
+  String get gigNotes => 'Notes';
+  @override
+  String get gigStartTime => 'Start Time';
+  @override
+  String get save => 'Save';
+  @override
+  String get cancel => 'Cancel';
+  @override
+  String get delete => 'Delete';
+  @override
+  String get sets => 'Sets';
+  @override
+  String get addSet => 'Add Set';
+  @override
+  String get renameSet => 'Rename Set';
+  @override
+  String get deleteSet => 'Delete Set';
+  @override
+  String get setTitle => 'Set Title';
+  @override
+  String get setTitleRequired => 'Set title is required';
+  @override
+  String setNumber(int number) => 'Set $number';
+  @override
+  String get noGigsFound => 'No gigs found. Create one to get started.';
+  @override
+  String get noSetsInGig => 'No sets in this gig.';
+  @override
+  String get emptySetDropSongsHere =>
+      'Empty set. Drop songs here or select from Songs panel.';
+  @override
+  String get addToSet => 'Add to Set';
+  @override
+  String get addToCurrentSet => 'Add to current set';
+  @override
+  String get relinkSong => 'Re-link Song';
+  @override
+  String get removeSong => 'Remove Song';
+  @override
+  String get moveSongUp => 'Move song up';
+  @override
+  String get moveSongDown => 'Move song down';
+  @override
+  String get moveSetUp => 'Move set up';
+  @override
+  String get moveSetDown => 'Move set down';
+  @override
+  String brokenSongTooltip(String path) =>
+      'Song file missing from disk: $path';
+  @override
+  String get duplicateGigTitle => 'A gig with this title already exists.';
+  @override
+  String get duplicateSetTitle =>
+      'A set with this title already exists in this gig.';
+  @override
+  String get duplicateSongInGig => 'This song is already in this gig.';
+  @override
+  String get gigMustHaveAtLeastOneSet =>
+      'A gig must contain at least one set.';
+  @override
+  String get nextSong => 'Next song';
+  @override
+  String get previousSong => 'Previous song';
+    @override
+    String get closeSet => 'Close set';
+    @override
+    String get unsupportedSongFile => 'The song file type is not supported.';
+    @override
+    String get setNotFound => 'Set not found in this gig.';
 }

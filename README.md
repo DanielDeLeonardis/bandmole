@@ -12,9 +12,9 @@ BandMole is a Flutter application designed for musicians and performers to displ
 
 ## Current Implementation Status
 
-BandMole is currently in the Release 1 / Songs Panel prototype phase. The shipped app includes a recursive song-library flow with persisted root-directory selection, Android Storage Access Framework support, UTF-8 decoding safeguards, responsive lyric scrolling, theme persistence, and declarative routing.
+BandMole implements Release 1 (Songs Panel and lyrics performance) and Release 2 (Song Groups). The app includes a recursively scanned song library, persisted root selection, Android Storage Access Framework access, lyric scrolling, and native gigs and sets backed by SQLite.
 
-The later feature areas — Song Groups, ChordPro Editor, Song Charts, Metadata, and Data Import/Export — are still part of the planned roadmap rather than implemented in the current codebase.
+ChordPro editing, Song Charts, Metadata, and Data Import/Export remain planned. See the [roadmap](docs/roadmap.md) for their scope.
 
 ---
 
@@ -35,11 +35,17 @@ The later feature areas — Song Groups, ChordPro Editor, Song Charts, Metadata,
 - **Song File Management**:
   - Repository-based song loading flow that separates the UI from file access and decoding concerns.
   - A single recursively scanned root song directory, with file and path problems surfaced as warnings.
-  - Platform-specific directory access behind a repository abstraction, with persisted permissions or handles on Android and Web where supported.
+  - Platform-specific directory access behind a repository abstraction, including persisted Android Storage Access Framework grants. Web support is planned.
   - UTF-8 encoding validation and malformed character handling.
   - Windows picker shows a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) instead of separate file-type entries.
-  - Renamed or moved songs are matched using filename heuristics, with manual relinking when a match is ambiguous and broken-link status when no match is found.
-  - `MainView` delegates snackbars and navigation to a dedicated `SongLoaderEffectsListener`, keeping the page layout focused on composition.
+  - Missing gig-song references are marked as broken links and can be relinked manually. Automatic filename-heuristic matching remains a requirement, not a verified behavior of the current validator.
+  - `MainView` delegates song-loading messages and the loaded-song callback to `SongLoaderEffectsListener`.
+
+- **Gigs & Sets (Release 2)**:
+  - Create, edit, delete, and reorder gigs, sets, and song assignments; gig and set titles are checked for duplicates after whitespace and case normalization.
+  - Store gigs transactionally in native SQLite, including migration of legacy JSON gig data.
+  - Keep song assignments relative to the selected library root; show missing songs as broken links that can be removed or relinked.
+  - Open a gig song in performance set mode with previous/next navigation across sets. While a set is open, the Songs library and panel tabs are locked; **Close set** restores normal navigation.
 
 - **Theme Preferences**:
   - Customizable color themes, including dark themes optimized for low-light stage performance.
@@ -48,7 +54,7 @@ The later feature areas — Song Groups, ChordPro Editor, Song Charts, Metadata,
 - **Declarative Navigation**:
   - Centralized route handling with `GoRouter` and nested named routes for the main screen, lyrics view, and preferences view.
   - The lyrics route expects a `Song` payload and redirects back home if it is opened without one.
-  - Song and preference transitions are handled through `MaterialApp.router` instead of imperative page pushes.
+  - Preferences and the standalone lyrics route use `MaterialApp.router`; the active song is displayed inside `MainView`.
 
 ---
 
@@ -58,7 +64,7 @@ The later feature areas — Song Groups, ChordPro Editor, Song Charts, Metadata,
 - **State Management**: [Flutter Riverpod](https://riverpod.dev/) (`flutter_riverpod` + `riverpod_annotation` / `riverpod_generator`)
 - **Navigation**: [GoRouter](https://pub.dev/packages/go_router) with `MaterialApp.router`
 - **Data Modeling**: [Freezed](https://pub.dev/packages/freezed) immutable state objects
-- **Storage**: [shared_preferences](https://pub.dev/packages/shared_preferences) for persistent configuration
+- **Storage**: [shared_preferences](https://pub.dev/packages/shared_preferences) for configuration; SQLite (`sqflite` / `sqflite_common_ffi`) for native gig and set data
 - **File System**: repository-based, platform-specific directory access with `filepicker_windows` used only by the Windows picker implementation
 
 ---
@@ -74,7 +80,7 @@ lib/
     |   `-- widgets/
     |       |-- tool_tip_raised_button_widget.dart
     |       `-- tool_tip_rounded_text_widget.dart
-    `-- features/
+    |-- features/
         |-- lyrics_scroller/
         |   |-- domain/
         |   |   |-- auto_scrollable_text.dart
@@ -98,6 +104,10 @@ lib/
         |       |   `-- app_themes_provider.dart
         |       `-- views/
         |           `-- preferences_view.dart
+        |-- song_groups/
+        |   |-- data/             # SQLite repository and load validation
+        |   |-- domain/           # Gig, set, song assignment, repository contract
+        |   `-- presentation/     # Gigs controller, panel, dialogs, localization
         `-- song_loader/
             |-- data/
             |   |-- io_song_file_reader.dart
@@ -184,6 +194,12 @@ flutter test integration_test/release_1_workflow_test.dart -d windows
 flutter test integration_test/release_1_workflow_test.dart -d <android-device-id>
 ```
 
+Run the Release 2 gig/set workflow on Windows:
+```bash
+flutter test integration_test/release_2_workflow_test.dart -d windows
+```
+This exercises setlist interactions, repository reopening, and keyboard navigation. The 80% branch-coverage gate is a target, not a percentage asserted by this README.
+
 Android library access uses a persisted Storage Access Framework tree grant. The
 device workflow should select a shared-storage folder, verify nested song
 browsing and loading, force-stop and relaunch, then verify the same root remains
@@ -202,4 +218,5 @@ Comprehensive product and technical documentation is maintained in the [`docs/`]
 - [Requirements](docs/requirements.md) — Detailed feature specifications, success criteria, and edge cases
 - [Architecture](docs/architecture.md) — Component breakdown, state flows, and layered architecture
 - [Architecture Recommendations](docs/architecture_recommendations.md) — Modularity guidelines and implemented refactoring roadmap
+- [Release 2 Technical Debt](docs/release_2_tech_debt.md) — Resolved cross-cutting findings and verification limits
 

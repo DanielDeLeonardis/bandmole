@@ -6,15 +6,15 @@
 
 ## 1. Executive Summary
 
-BandMole is an offline-first Flutter application targeting Windows 10 and Android 10 first, with Linux and Web planned next, for managing, displaying, and smoothly auto-scrolling song lyrics and chord charts. The current codebase implements the initial Release 1 flow: recursive song-library loading, persisted root-directory selection, platform-specific directory access on Android, UTF-8-safe decoding, auto-scrolling transport controls, text customization, and persistent user themes.
+BandMole is an offline-first Flutter application targeting Windows 10 and Android 10 first, with Linux and Web planned next. The codebase implements Release 1 song-library and lyrics-performance flows and Release 2 gig/set management. Native gig data is persisted in SQLite; song assignments use library-root-relative paths.
 
 The architecture blends Flutter Riverpod state management, Freezed immutable data models, and Flutter widget lifecycle hooks with platform abstractions for file picking and decoding.
 
 Auto-scroll jump actions are unified into a single `AutoScrollableTextNotifier` flow. Instead of a separate event stream, jump navigation is represented as a one-shot `pendingCommand` on the shared `AutoScrollableText` state.
 
-The codebase is organized in a feature-first structure under `lib/src/` with shared UI helpers in `core/` and feature folders for `lyrics_scroller`, `preferences`, and `song_loader`.
+The codebase is organized in a feature-first structure under `lib/src/` with shared UI helpers in `core/` and feature folders for `lyrics_scroller`, `preferences`, `song_groups`, and `song_loader`.
 
-The current implementation is the Release 1 foundation for the broader roadmap: Song Groups, ChordPro Editor, Song Charts, Metadata, and Data Import and Export are still future work. The implemented architecture already includes a recursively scanned song library, persisted access state, and explicit warning handling for file and path problems.
+ChordPro editing, Song Charts, Metadata, and Data Import and Export remain planned. The implemented architecture includes a recursively scanned song library, persisted access state, gig/set validation, broken-link handling, and performance set mode.
 
 ---
 
@@ -24,7 +24,7 @@ The application is structured into five primary vertical tiers:
 
 ```text
 Presentation Layer
-  - Views: MainView, SongView, PreferenceView
+  - Views: MainView, GigsPanelView, SongView, PreferenceView
   - Widgets: AutoScrollableTextWidget, custom tooltip widgets
   - Reads and writes Riverpod state
 
@@ -38,14 +38,16 @@ State Management & Logic
   - SongTransposeNotifier (Notifier<int>)
   - AppThemeNotifier (AsyncNotifier<ThemeData>)
   - SongLoaderController (AsyncNotifier<Song?>)
+  - GigsController (gig/set CRUD, selection, and set-mode navigation)
 
 Services & Infrastructure
   - PreferenceService (SharedPreferences)
-  - SongRepository + SongFileReader + SongDirectoryScanner
+  - SongRepository + SongFileReader; MainView coordinates library-root selection and scanning
   - Platform-specific directory access and persisted access capabilities
+  - GigRepository / SqliteGigRepository (native SQLite and legacy JSON migration)
 
 Domain Models
-  - Song, SongFile, SongRepository, AutoScrollableText (Freezed), SongFormattingResult, AppTheme
+  - Song, SongFile, SongRepository, Gig, SongSet, GigSong, GigRepository, AutoScrollableText (Freezed), SongFormattingResult, AppTheme
 ```
 
 ---
@@ -55,11 +57,15 @@ Domain Models
 ### 3.1 Presentation Layer (`lib/src/features/.../presentation/`)
 
 - **`MainView` (`lib/src/features/song_loader/presentation/views/main_view.dart`)**
-  - The initial landing screen.
-  - Hosts the file picker entry point (`Open song`) and navigation action to preferences.
-  - Dispatches song loading to `SongLoaderController`, while `SongLoaderEffectsListener` handles success/error outcomes via a lifecycle-safe listener that defers snackbars and navigation to post-frame callbacks.
-  - Uses declarative named routes via `context.pushNamed()` to transition to `SongView` and `PreferenceView`.
+  - The main screen hosts the Songs library, embedded song display, Gigs panel, and navigation action to preferences.
+  - Dispatches song loading to `SongLoaderController`, while `SongLoaderEffectsListener` handles success/error outcomes via a lifecycle-safe listener.
+  - Uses responsive panel tabs on narrow screens and a side-by-side library on wide screens. When a gig song opens in set mode, it blocks library and tab input until **Close set** is selected.
+  - Uses the centralized router for standalone lyrics and preferences routes; the performance song display is embedded in `MainView`.
   - Resets transpose state before opening non-ChordPro songs so the lyrics view starts at concert pitch for plain text files.
+
+- **`GigsPanelView` (`lib/src/features/song_groups/presentation/views/gigs_panel_view.dart`)**
+  - Presents gig/set selection, editing, reordering, and song assignment, including missing-song recovery.
+  - `GigsController` holds selected gig, set, and active song indices; previous/next navigation crosses set boundaries without wrapping after the last set.
 
 - **`SongView` (`lib/src/features/lyrics_scroller/presentation/views/song_view.dart`)**
   - The primary performance display.
@@ -125,7 +131,7 @@ State management uses Riverpod:
 4. **`SongLoaderController` (`song_loader_controller.dart`)**
    - Manages the song-loading workflow as an `AsyncNotifier<Song?>`.
    - Dispatches repository calls for song file selection and loading.
-   - Exposes loading, success, and error states to `SongLoaderEffectsListener`, which reacts with snackbars and navigation after the current frame has settled.
+   - Exposes loading, success, and error states to `SongLoaderEffectsListener`, which reacts with snackbars and invokes the loaded-song callback after the current frame has settled.
 
 ---
 
@@ -138,12 +144,16 @@ State management uses Riverpod:
 - **Target directory access and scanning services**
   - Select and persist one root song directory using platform-appropriate picker permissions or handles.
   - Recursively scan supported files, report file and path warnings, and retain unavailable roots for later restoration.
-  - Use filename heuristics for renamed or moved songs, offer manual relinking for ambiguous matches, and preserve unresolved references as broken links.
+  - Validate gig-song references against the current library, offer manual relinking for missing songs, and preserve unresolved references as broken links. Automatic filename-heuristic matching remains planned.
 - **`windows_song_file_picker.dart`**
   - Configures the Windows file dialog with a single combined filter for allowed song files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, and `.txt`) so the dialog shows matching files without forcing the user to choose a specific type.
 
 - **`preference_service.dart`**
   - Wraps `SharedPreferences` to load and save `themeData` by enum string representation.
+
+- **`sqlite_gig_repository.dart`**
+  - Persists gigs and sets transactionally in native SQLite through `GigRepository`.
+  - Uses a versioned schema and migrates legacy JSON gig records from `bandmole_gigs_store`.
 
 Jump navigation is carried by the shared notifier state rather than a separate `StreamController`.
 
@@ -162,6 +172,9 @@ Jump navigation is carried by the shared notifier state rather than a separate `
 
 - **`SongRepository` (`song_repository.dart`)**
   - Domain-level contract for picking and loading song files.
+
+- **`Gig`, `SongSet`, `GigSong`, `GigRepository` (`lib/src/features/song_groups/domain/`)**
+  - Model gig/set ordering and relative song references behind the gig persistence contract.
 
 - **`AutoScrollableText` (`auto_scrollable_text.dart`)**
   - An immutable Freezed value object representing reading and scrolling state.
@@ -182,16 +195,21 @@ Jump navigation is carried by the shared notifier state rather than a separate `
 
 ```text
 [User opens the Songs Panel]
-  -> SongLoaderController selects or restores the persisted root directory
-  -> SongDirectoryScanner recursively scans supported files and reports warnings
-  -> Refresh or gig opening compares paths and uses filename heuristics for moved songs
-  -> Ambiguous matches are manually relinked; unresolved references remain broken links
-  -> User selects a song and SongRepository.loadSong(file) replaces the current song
+  -> MainView restores or selects the persisted root directory
+  -> Android SAF scan or SongLibrary.scanDirectory lists supported files
+  -> GigLoadValidator checks saved relative song references for missing files
+  -> Missing assignments can be manually relinked; unresolved references remain broken links
+  -> User selects a song and SongLoaderController loads it through SongRepository
   -> Decode bytes as UTF-8
      - Success: isMalformed = false
      - Failure: fallback with allowMalformed = true, isMalformed = true
   -> SongLoaderEffectsListener resets transpose state for plain-text songs
-  -> SongLoaderEffectsListener calls context.pushNamed(AppRoutes.lyrics, extra: song)
+  -> MainView displays the loaded song in its embedded SongView
+
+[User selects a gig song]
+  -> GigsController enters set mode and tracks the active set/song indices
+  -> MainView blocks Songs library and tab input while set mode remains active
+  -> Previous/next moves across set boundaries; Close set clears active navigation
 ```
 
 ### 4.2 Auto-Scroll Execution & Animation Flow
