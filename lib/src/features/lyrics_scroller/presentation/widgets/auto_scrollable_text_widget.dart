@@ -70,6 +70,21 @@ class _AutoScrollableTextWidgetState
   }
 
   @override
+  void didUpdateWidget(covariant AutoScrollableTextWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.text != widget.text) {
+      _schedulePostFrame(() {
+        if (!mounted) return;
+        if (_scrollController.hasClients) {
+          _scrollController.jumpTo(0);
+        }
+        _textNotifier.resetScrollState();
+        _updatePositionState();
+      });
+    }
+  }
+
+  @override
   void didChangeMetrics() {
     _schedulePostFrame(_updatePositionState);
   }

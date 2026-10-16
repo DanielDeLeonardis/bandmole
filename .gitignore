@@ -1,6 +1,5 @@
 # Miscellaneous
 *.class
-*.freezed.dart
 *.g.dart
 *.log
 *.pyc

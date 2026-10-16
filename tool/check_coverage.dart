@@ -4,6 +4,7 @@ const featureRoots = <String, String>{
   'song_loader': 'lib/src/features/song_loader/',
   'lyrics_scroller': 'lib/src/features/lyrics_scroller/',
   'preferences': 'lib/src/features/preferences/',
+  'song_groups': 'lib/src/features/song_groups/',
 };
 
 void main() {

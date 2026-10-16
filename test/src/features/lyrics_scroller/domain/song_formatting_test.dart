@@ -52,4 +52,69 @@ how [D]sweet the [G]sound
     expect(SongFormatter.transposeChord('Gm7', -2), 'Fm7');
     expect(SongFormatter.transposeChord('N.C.', 2), 'N.C.');
   });
+
+  test('SongFormatter parses supported metadata, section aliases, and comments', () {
+    const rawText = '''
+{subtitle: Live version}
+{artist: The Band}
+{capo: 3}
+{soc}
+[C]Chorus
+{eoc}
+{sov}
+Verse
+{eov}
+{start_of_bridge}
+Bridge
+{end_of_bridge}
+{start_of_intro}
+Intro
+{end_of_intro}
+{start_of_outro}
+Outro
+{end_of_outro}
+{start_of_tab}
+Tab
+{end_of_tab}
+{comment: Repeat the chorus}
+''';
+
+    final result = SongFormatter.parse(rawText);
+
+    expect(result.subtitle, 'Live version');
+    expect(result.artist, 'The Band');
+    expect(result.capo, 3);
+    expect(result.sections.map((section) => section.type), [
+      SongSectionType.chorus,
+      SongSectionType.verse,
+      SongSectionType.bridge,
+      SongSectionType.intro,
+      SongSectionType.outro,
+      SongSectionType.tag,
+      SongSectionType.freeform,
+    ]);
+    expect(result.sections.last.lines.single.plainText, 'Repeat the chorus');
+  });
+
+  test('SongFormatter handles invalid capo and empty or malformed chord tokens', () {
+    final invalidCapo = SongFormatter.parse('{capo:unknown}\nLyrics');
+    expect(invalidCapo.capo, isNull);
+
+    final empty = SongFormatter.parse('{title: No lyrics}');
+    expect(empty.sections.single.type, SongSectionType.freeform);
+    expect(empty.sections.single.lines, isEmpty);
+
+    final malformedChord = SongFormatter.parse('[]plain [C]lyric[]tail');
+    expect(
+      malformedChord.sections.single.lines.single.plainText,
+      '[]plain lyric[]tail',
+    );
+    final emptyChordTokens = SongFormatter.parse('[]plain');
+    expect(emptyChordTokens.sections.single.lines.single.plainText, '[]plain');
+    expect(
+      SongFormatter.transposeChord('C/H', 2),
+      'D',
+    );
+    expect(SongFormatter.transposeChord('Hmaj7', 2), 'Hmaj7');
+  });
 }

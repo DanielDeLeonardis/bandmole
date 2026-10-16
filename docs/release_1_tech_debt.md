@@ -2,6 +2,8 @@
 
 > Status: implemented and closed for the current Release 1 codebase. This document remains as a historical record of the cross-cutting technical work that was completed to align the app with the Release 1 requirements and architecture, rather than as an open list of remaining issues.
 
+> Historical snapshot: the findings below describe the Release 1 review, not the current state of the repository. Release 2 now adds native SQLite gig persistence, setlist tests, and a coverage gate; see [Release 2 Technical Debt](release_2_tech_debt.md).
+
 This register reviews the Cross-Cutting Technical Requirements in [requirements.md](requirements.md) against the current Release 1 Songs Panel and lyrics-scroller implementation. It records gaps to implement or verify; it does not change runtime behavior. Priorities reflect Release 1 risk.
 
 ## Findings

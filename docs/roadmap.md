@@ -4,11 +4,13 @@
 
 This roadmap turns the full requirements into a release sequence that is easier to scan at a glance. It keeps the same feature ordering as the requirements document, but trims the detail down to release goals, dependencies, and completion signals.
 
-Each feature area is delivered as a separate release for the first-release platforms. The current repository is a working Release 1 prototype, while the later releases remain planned feature work.
+Each feature area is delivered as a separate release for the first-release platforms. Releases 1 and 2 are implemented in the current codebase; Releases 3–6 remain planned. Success signals below describe product goals and do not assert that every platform-specific acceptance check has been independently verified.
 
 ## Release Sequence
 
 ### Release 1: Songs Panel
+
+Status: implemented.
 
 Goal:
 - Provide a browsable song library with search, persistent folder state, and a responsive panel layout.
@@ -19,12 +21,14 @@ Depends on:
 
 Success signal:
 - The app prompts for a folder with a directory-only picker, remembers unavailable roots, and restores them when available again.
-- The library scans subdirectories, surfaces file and path warnings, and persists Android or Web directory permissions or handles where supported.
+- The library scans subdirectories, surfaces file and path warnings, and persists Android directory access; Web handle persistence belongs to the planned platform expansion.
 - It restores expanded folders and the last selected song, and replaces the current song immediately when a file is selected.
-- Refresh and gig opening detect external changes and use filename heuristics to follow renamed or moved songs, with manual relinking for ambiguous matches and broken links when unresolved.
+- Gig loading marks unresolved relative song references as broken links and supports manual relinking. Automatic filename-heuristic matching for renamed or moved songs remains planned.
 - The songs panel moves into a selectable tabbed layout on smaller screens.
 
 ### Release 2: Song Groups
+
+Status: implemented; see [Release 2 Technical Debt](release_2_tech_debt.md) for verification limits.
 
 Goal:
 - Let a musician build, reorder, and navigate gigs and sets using songs selected from the Songs Panel.
@@ -40,8 +44,12 @@ Success signal:
 - Set titles can be entered and renamed as long as they remain unique within the gig.
 - Set titles use case-insensitive comparison with normalized whitespace, and deleted songs remain as broken links in existing gigs.
 - Missing songs remain editable as clearly marked broken links and can be removed or re-linked.
+- Opening a song from a gig enters set mode: previous/next navigates the setlist, the Songs library and panel tabs remain locked, and **Close set** restores normal navigation.
+- Native gig data is stored in SQLite, with migration of legacy JSON records.
 
 ### Release 3: ChordPro Editor
+
+Status: planned.
 
 Goal:
 - Create and edit ChordPro songs with preview, outline, and conversion support.
@@ -56,6 +64,8 @@ Success signal:
 
 ### Release 4: Song Charts
 
+Status: planned.
+
 Goal:
 - Help users find, generate, and save chord charts for supported instruments.
 
@@ -66,6 +76,8 @@ Success signal:
 - Users can search chord layouts, view results for supported instruments, and save favorites.
 
 ### Release 5: Metadata
+
+Status: planned.
 
 Goal:
 - Import and review MusicBrainz metadata before writing changes.
@@ -79,6 +91,8 @@ Success signal:
 - Lookup results are cached, requests are rate-limited, and MusicBrainz attribution is displayed.
 
 ### Release 6: Data Import and Export
+
+Status: planned.
 
 Goal:
 - Provide full and granular export/import of library data, songs, and preferences packaged in ZIP archives, with conflict warnings and skip/overwrite options.

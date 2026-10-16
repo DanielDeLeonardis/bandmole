@@ -10,12 +10,24 @@ class SongView extends ConsumerWidget {
   final String text;
   final bool canTranspose;
   final bool embedded;
+  final VoidCallback? onNextSong;
+  final VoidCallback? onPreviousSong;
+  final bool canGoNext;
+  final bool canGoPrevious;
+  final String? gigInfo;
+  final bool showGigNavigation;
 
   const SongView({
     super.key,
     required this.text,
     this.canTranspose = true,
     this.embedded = false,
+    this.onNextSong,
+    this.onPreviousSong,
+    this.canGoNext = false,
+    this.canGoPrevious = false,
+    this.gigInfo,
+    this.showGigNavigation = false,
   });
 
   @override
@@ -66,14 +78,62 @@ class SongView extends ConsumerWidget {
       ref.read(autoScrollableTextProvider.notifier).jumpToEnd();
     }
 
+    final hasGigNavigation =
+        showGigNavigation ||
+        gigInfo != null ||
+        onNextSong != null ||
+        onPreviousSong != null;
+
     final songBody = Stack(
       children: [
         Positioned.fill(
           child: Padding(
-            padding: const EdgeInsets.only(right: 176),
+            padding: EdgeInsets.only(
+              right: 176,
+              top: hasGigNavigation ? 48.0 : 0.0,
+            ),
             child: AutoScrollableTextWidget(text: text),
           ),
         ),
+        if (hasGigNavigation)
+          Positioned(
+            left: 0,
+            right: 176,
+            top: 0,
+            child: Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.6),
+              child: Row(
+                children: [
+                  IconButton(
+                    key: const ValueKey<String>('gig_prev_song_button'),
+                    icon: const Icon(Icons.arrow_back),
+                    tooltip: l10n.previousSong,
+                    onPressed: canGoPrevious ? onPreviousSong : null,
+                  ),
+                  Expanded(
+                    child: Text(
+                      gigInfo ?? '',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    key: const ValueKey<String>('gig_next_song_button'),
+                    icon: const Icon(Icons.arrow_forward),
+                    tooltip: l10n.nextSong,
+                    onPressed: canGoNext ? onNextSong : null,
+                  ),
+                ],
+              ),
+            ),
+          ),
         Positioned(
           right: 12,
           top: 8,

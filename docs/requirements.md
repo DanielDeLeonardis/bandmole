@@ -4,7 +4,7 @@
 
 BandMole is an offline-first song management and performance app for solo musicians and bands, with the primary focus on an individual musician. Core features must remain available when network access is not available. Network-enabled features should degrade gracefully to offline-only behavior.
 
-> Current implementation status: this repository already contains the initial Release 1 implementation for library browsing, persistent song-root selection, and lyric playback, while the later release sections describe future product work that is not yet implemented in the shipped app.
+> Current implementation status: Releases 1 and 2 are implemented for the song library, lyric playback, and gig/set workflows. Releases 3–6 describe planned product work. See [Release 2 Technical Debt](release_2_tech_debt.md) for cross-cutting verification limits.
 
 ## Release Plan
 
@@ -42,6 +42,8 @@ Failure cases and edge cases:
 - Showing unavailable directories as available is out of scope.
 
 ## Release 2: Song Groups
+
+Status: implemented and covered by the current song-groups model, repository persistence, UI, and regression tests.
 
 ### Goal
 
@@ -100,6 +102,8 @@ Failure cases and edge cases:
 - A broken song link must be indicated in red with a tooltip explaining the problem.
 - The user can remove the missing song or re-link it to any supported song file.
 - Navigating past the end of one set continues automatically into the next set, and navigating backward from the start of one set continues into the previous set.
+- Selecting a gig song enters performance set mode. While it is active, the Songs library and panel tabs cannot be selected; **Close set** exits the mode and restores library and tab access.
+- The active song view identifies its gig, set, and position with readable separators. Closing the set clears active set/song navigation state.
 
 #### Success Criteria
 
@@ -109,6 +113,7 @@ User-facing:
 - Given a user renames a set, when the new title is unique within the gig, then the change is saved successfully.
 - Given a user adds a song from the Songs Panel by selection or by drag-and-drop, when they add it to a set, then the song appears in the set.
 - Given the user moves through songs in order, when they advance past the end of a set, then the app continues to the next set automatically.
+- Given a gig song is active, when the user tries to switch panels or select a library song, then the app remains in set mode until **Close set** is selected.
 - Given a song file is missing, when the gig is opened, then the broken link is clearly visible in red with a tooltip, and the user can remove or re-link the song without the gig becoming read-only.
 
 Technical acceptance:
@@ -117,6 +122,7 @@ Technical acceptance:
 - Given a set is reordered, when the data model is saved, then the stored set order and visible numbering match.
 - Given a song is assigned to a gig, when a second assignment is attempted anywhere else in that gig, then the validator rejects it.
 - Given a set title duplicates another set title in the same gig, when the user tries to save it, then the app rejects the duplicate.
+- Given **Close set** is selected, when the Songs library or panel tabs are used, then they accept input again and gig-song navigation is inactive.
 
 Failure cases and edge cases:
 - Duplicate songs across the gig are not allowed.

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Release 2: Song Groups**:
+  - Added gig and set creation, editing, ordering, and song assignment with normalized title uniqueness and duplicate-song validation across a gig.
+  - Added native SQLite persistence for gigs and sets, including migration of legacy JSON gig records.
+  - Added library-root-relative song references, missing-song indicators, and remove/relink workflows.
+  - Added setlist performance navigation across songs and sets, with a responsive Gigs panel and a **Close set** action.
+  - Added localized gig/set errors and close-set text, focused unit/widget coverage, and a desktop Release 2 integration workflow.
 - **Release 1: Song Library & Lyrics Performance**:
   - Implemented a song library workflow with persisted root-directory selection, in-app directory picking, and Android Storage Access Framework support for restoring and reusing a selected library folder.
   - Added recursive song scanning from the selected root directory, filtered supported files (`.cho`, `.crd`, `.chopro`, `.chordpro`, `.pro`, `.txt`), and sorted results for stable library browsing.
@@ -22,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added lifecycle-safe state handling for snackbars, route transitions, and scroll cleanup through post-frame callbacks so provider updates do not run against a deactivated widget tree.
 
 ### Fixed
+- **Release 2 set mode**: Blocked Songs library selection and panel tab switching while a gig song is active; **Close set** restores access and clears active navigation state. The song header now uses readable gig/set/position separators.
 - **Static Analysis**:
   - Removed unused optional constructor parameters (`type`, `label`) from `_SongSectionBuilder` in `lib/src/features/lyrics_scroller/domain/song_formatting.dart` to resolve `unused_element_parameter` analyzer warnings.
 

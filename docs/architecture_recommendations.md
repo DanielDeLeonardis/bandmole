@@ -6,7 +6,7 @@
 
 ## 1. Overview & Objectives
 
-While BandMole currently fulfills its prototype responsibilities with responsive controls, several structural and design patterns can be improved to align with Flutter industry best practices and the six-release product requirements, especially the layered Presentation / Domain / Data approach.
+BandMole implements the Release 1 Songs Panel and Release 2 Song Groups workflows. These recommendations record completed structural changes and guidance for the remaining releases, especially the layered Presentation / Domain / Data approach.
 
 Key goals of these recommendations:
 1. Eliminate redundant state channels between UI components.
@@ -56,29 +56,31 @@ When `jumpToStart()` is called, the notifier sets `pendingCommand = ScrollComman
 Implemented in the current codebase.
 
 ### Result
-The current prototype lives under a feature-first tree in `lib/src/`; planned release boundaries should extend this structure for the Songs Panel, Song Groups, ChordPro Editor, Song Charts, Metadata, and Data Import and Export:
+The implemented app lives under a feature-first tree in `lib/src/`; future releases should extend the same structure for ChordPro editing, Song Charts, Metadata, and Data Import and Export:
 
 ```text
 lib/
 |-- src/
 |   |-- app.dart
 |   |-- core/
-|   |   |-- theme/
-|   |   |-- utils/
 |   |   `-- widgets/
-|   `-- features/
-|       |-- lyrics_scroller/
-|       |   |-- data/
-|       |   |-- domain/
-|       |   `-- presentation/
-|       |-- song_loader/
-|       |   |-- data/
-|       |   |-- domain/
-|       |   `-- presentation/
-|       `-- preferences/
-|           |-- data/
-|           |-- domain/
-|           `-- presentation/
+|   |-- features/
+|   |   |-- lyrics_scroller/
+|   |   |   |-- domain/
+|   |   |   `-- presentation/
+|   |   |-- song_loader/
+|   |   |   |-- data/
+|   |   |   |-- domain/
+|   |   |   `-- presentation/
+|   |   |-- preferences/
+|   |   |   |-- data/
+|   |   |   |-- domain/
+|   |   |   `-- presentation/
+|   |   `-- song_groups/
+|   |       |-- data/
+|   |       |-- domain/
+|   |       `-- presentation/
+|   `-- navigation/
 ```
 
 The old top-level `models/`, `providers/`, `service/`, `views/`, and `widgets/` folders have been removed.
@@ -105,21 +107,21 @@ MainView
 ```
 
 The domain layer now owns a platform-neutral file model:
-- `SongFile` stores the selected file path and any platform-specific access capability without exposing `dart:io File`.
+- `SongFile` stores a platform-neutral path and optional display path without exposing `dart:io File`.
 - `SongFile` also exposes extension-based ChordPro detection so the UI can gate transposition behavior on the loaded source type.
-- The current prototype `SongRepository` exposes `pickSongFile()` and `loadSong(SongFile)`; the target library API should add root-directory selection, recursive refresh, warning reporting, and broken-reference relinking.
+- `SongRepository` exposes `pickSongFile()` and `loadSong(SongFile)`. `MainView` currently coordinates root selection and recursive scanning, while gig load validation and manual relinking live in the Song Groups feature; consolidating these boundaries remains an architectural option.
 
-The data layer now provides platform-specific implementations behind the repository, and the target design should extend this boundary to directory access and persisted platform capabilities:
+The data layer provides platform-specific file access behind the repository. Directory access and persisted platform capabilities are currently handled separately:
 - `WindowsSongFilePicker` wraps `filepicker_windows`.
-- Android and Web implementations should use platform-appropriate directory pickers and persist permissions or handles where supported.
+- Android library access uses a persisted Storage Access Framework tree grant; Web handle persistence belongs to the planned Web expansion.
 - Capability-specific fallbacks should report unavailable access clearly rather than treating required platforms as unsupported.
 - `IoSongFileReader` reads the selected file bytes for decoding.
 
-`MainView` now only reacts to controller outcomes:
+`MainView` reacts to controller outcomes:
 - dispatches the button tap to `SongLoaderController`,
 - show a snackbar when no file is selected,
 - show a snackbar when the file has encoding issues,
-- reset transpose state for plain-text songs and navigate to `SongView` when the song text is loaded successfully.
+- reset transpose state for plain-text songs and display the song in the embedded `SongView` when text loads successfully.
 
 ---
 
@@ -140,18 +142,18 @@ MainView
       -> SongRepository.pickSongFile()
       -> SongRepository.loadSong(file)
 
-Target library flow:
-  -> SongRepository.selectRootDirectory()
-  -> SongRepository.refreshLibrary()
-  -> SongRepository.relinkSongReference()
+Library and gig-reference flow:
+  -> MainView selects a root and refreshes the library
+  -> GigLoadValidator checks saved relative song references
+  -> GigsPanelView offers manual relinking for missing songs
 ```
 
 `MainView` now stays focused on layout while a dedicated `SongLoaderEffectsListener` reacts to controller state changes:
 - show a snackbar when the repository reports no file selected,
 - show a snackbar when the file is malformed or cannot be loaded,
-- navigate to `SongView` when a song loads successfully.
+- display the loaded song in the embedded `SongView` (the standalone lyrics route remains available).
 
-To keep those reactions lifecycle-safe, the listener defers snackbars and navigation to post-frame callbacks. The lyrics scroller follows the same pattern for scroll commands and state cleanup, which avoids mutating Riverpod state or looking up ancestors from a deactivated context.
+To keep those reactions lifecycle-safe, the listener defers snackbars and the loaded-song callback to post-frame callbacks. The lyrics scroller follows the same pattern for scroll commands and state cleanup, which avoids mutating Riverpod state or looking up ancestors from a deactivated context.
 The lyrics view also disables transpose controls for plain-text files and resets the transpose offset to zero when a non-ChordPro song is opened.
 
 ---
@@ -178,7 +180,7 @@ MyApp
 
 Navigation now uses declarative named routes consistently:
 - `MainView` opens preferences with `context.pushNamed(AppRoutes.preferences)`.
-- `MainView` opens lyrics with `context.pushNamed(AppRoutes.lyrics, extra: song)`.
+- `MainView` embeds `SongView` for the active song; a separate guarded lyrics route remains available.
 - `GoRouter` builds `MainView`, `SongView`, and `PreferenceView` from one central route tree, while the lyrics route now rejects requests that do not include a `Song` payload.
 
 ---
@@ -204,7 +206,7 @@ This keeps the formatting logic out of the widget tree while still giving musici
 Implemented in the current codebase.
 
 ### Result
-`MainView` now stays focused on composition, while a dedicated `SongLoaderEffectsListener` owns the transient snackbars and route changes triggered by `SongLoaderController` state.
+`MainView` stays focused on composition, while `SongLoaderEffectsListener` owns transient song-loading messages. The Release 2 gig workflow is separate in `GigsController` and `GigsPanelView`; native gig persistence is isolated behind `GigRepository` and `SqliteGigRepository`.
 
 That separation keeps the page layout easier to read and makes the effect handling reusable if another screen ever needs to respond to the same loader state:
 
@@ -212,7 +214,7 @@ That separation keeps the page layout easier to read and makes the effect handli
 MainView
   -> SongLoaderEffectsListener
   -> songLoaderControllerProvider
-  -> snackbars + lyrics navigation
+  -> snackbars + loaded-song callback
 ```
 
 The listener still performs the UI reactions in the presentation layer, but the orchestration is no longer embedded directly inside the page widget.
