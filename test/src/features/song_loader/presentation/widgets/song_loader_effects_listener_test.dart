@@ -166,7 +166,7 @@ Future<ProviderContainer> _pumpListener(
 }
 
 class _FakeSongRepository implements SongRepository {
-  _FakeSongRepository({this.selectedFile, this.song, this.pickError, this.loadError});
+  _FakeSongRepository({this.selectedFile, this.song, this.pickError});
 
   SongFile? selectedFile;
   Song? song;

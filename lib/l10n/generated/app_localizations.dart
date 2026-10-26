@@ -561,6 +561,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set not found in this gig.'**
   String get setNotFound;
+
+  /// No description provided for @editorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ChordPro Editor'**
+  String get editorTitle;
+
+  /// No description provided for @editorNewSong.
+  ///
+  /// In en, this message translates to:
+  /// **'New ChordPro song'**
+  String get editorNewSong;
+
+  /// No description provided for @editorEditSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit ChordPro song'**
+  String get editorEditSong;
+
+  /// No description provided for @editorConvertSong.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert text song to ChordPro'**
+  String get editorConvertSong;
+
+  /// No description provided for @editorClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close editor'**
+  String get editorClose;
+
+  /// No description provided for @editorSource.
+  ///
+  /// In en, this message translates to:
+  /// **'ChordPro source'**
+  String get editorSource;
+
+  /// No description provided for @editorPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get editorPreview;
+
+  /// No description provided for @editorOutline.
+  ///
+  /// In en, this message translates to:
+  /// **'Outline'**
+  String get editorOutline;
+
+  /// No description provided for @editorFilename.
+  ///
+  /// In en, this message translates to:
+  /// **'Song filename'**
+  String get editorFilename;
+
+  /// No description provided for @editorConvert.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to ChordPro'**
+  String get editorConvert;
+
+  /// No description provided for @editorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Place the cursor, then tap or drag a chord or directive into the editor.'**
+  String get editorHint;
+
+  /// No description provided for @editorDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get editorDismiss;
+
+  /// No description provided for @editorCustomDirective.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom directive'**
+  String get editorCustomDirective;
+
+  /// No description provided for @editorCustomName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get editorCustomName;
+
+  /// No description provided for @editorAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get editorAdd;
+
+  /// No description provided for @editorInvalidCustomName.
+  ///
+  /// In en, this message translates to:
+  /// **'Use a new lowercase directive name.'**
+  String get editorInvalidCustomName;
+
+  /// No description provided for @editorConvertBeforeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Convert before saving a text song.'**
+  String get editorConvertBeforeSave;
+
+  /// No description provided for @editorSongSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Song saved.'**
+  String get editorSongSaved;
+
+  /// No description provided for @editorUnsavedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get editorUnsavedChanges;
+
+  /// No description provided for @editorSaveBeforeLeaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes before leaving the editor?'**
+  String get editorSaveBeforeLeaving;
+
+  /// No description provided for @editorDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get editorDiscard;
+
+  /// No description provided for @editorSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to save song: {error}'**
+  String editorSaveFailed(String error);
+
+  /// No description provided for @editorLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Line {number}'**
+  String editorLine(int number);
 }
 
 class _AppLocalizationsDelegate

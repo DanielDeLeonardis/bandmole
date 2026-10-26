@@ -4,7 +4,7 @@
 
 BandMole is an offline-first song management and performance application for solo musicians and bands, with the primary emphasis on the individual musician workflow. The product must remain useful without network access and should degrade gracefully when network-backed features are unavailable.
 
-> Current implementation status: Releases 1 (Songs Panel and lyrics performance) and 2 (Song Groups) are implemented. Releases 3–6 describe planned product work; platform-specific and coverage verification limits are recorded in [Release 2 Technical Debt](release_2_tech_debt.md).
+> Current implementation status: Releases 1 (Songs Panel and lyrics performance) and 2 (Song Groups) are implemented. The Release 3 editor is in progress; Releases 4–6 describe planned product work; platform-specific and coverage verification limits are recorded in [Release 2 Technical Debt](release_2_tech_debt.md).
 
 ## 2. Product Goals
 

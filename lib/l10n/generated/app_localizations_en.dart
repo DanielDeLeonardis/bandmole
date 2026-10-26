@@ -254,4 +254,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setNotFound => 'Set not found in this gig.';
+
+  @override
+  String get editorTitle => 'ChordPro Editor';
+
+  @override
+  String get editorNewSong => 'New ChordPro song';
+
+  @override
+  String get editorEditSong => 'Edit ChordPro song';
+
+  @override
+  String get editorConvertSong => 'Convert text song to ChordPro';
+
+  @override
+  String get editorClose => 'Close editor';
+
+  @override
+  String get editorSource => 'ChordPro source';
+
+  @override
+  String get editorPreview => 'Preview';
+
+  @override
+  String get editorOutline => 'Outline';
+
+  @override
+  String get editorFilename => 'Song filename';
+
+  @override
+  String get editorConvert => 'Convert to ChordPro';
+
+  @override
+  String get editorHint =>
+      'Place the cursor, then tap or drag a chord or directive into the editor.';
+
+  @override
+  String get editorDismiss => 'Dismiss';
+
+  @override
+  String get editorCustomDirective => 'Custom directive';
+
+  @override
+  String get editorCustomName => 'Name';
+
+  @override
+  String get editorAdd => 'Add';
+
+  @override
+  String get editorInvalidCustomName => 'Use a new lowercase directive name.';
+
+  @override
+  String get editorConvertBeforeSave =>
+      'Choose Convert before saving a text song.';
+
+  @override
+  String get editorSongSaved => 'Song saved.';
+
+  @override
+  String get editorUnsavedChanges => 'Unsaved changes';
+
+  @override
+  String get editorSaveBeforeLeaving =>
+      'Save changes before leaving the editor?';
+
+  @override
+  String get editorDiscard => 'Discard';
+
+  @override
+  String editorSaveFailed(String error) {
+    return 'Unable to save song: $error';
+  }
+
+  @override
+  String editorLine(int number) {
+    return 'Line $number';
+  }
 }

@@ -6,15 +6,15 @@
 
 ## 1. Executive Summary
 
-BandMole is an offline-first Flutter application targeting Windows 10 and Android 10 first, with Linux and Web planned next. The codebase implements Release 1 song-library and lyrics-performance flows and Release 2 gig/set management. Native gig data is persisted in SQLite; song assignments use library-root-relative paths.
+BandMole is an offline-first Flutter application targeting Windows 10 and Android 10 first, with Linux and Web planned next. The codebase implements Release 1 song-library and lyrics-performance flows and Release 2 gig/set management, with Release 3 ChordPro editing in progress. Native gig data is persisted in SQLite; song assignments use library-root-relative paths.
 
 The architecture blends Flutter Riverpod state management, Freezed immutable data models, and Flutter widget lifecycle hooks with platform abstractions for file picking and decoding.
 
 Auto-scroll jump actions are unified into a single `AutoScrollableTextNotifier` flow. Instead of a separate event stream, jump navigation is represented as a one-shot `pendingCommand` on the shared `AutoScrollableText` state.
 
-The codebase is organized in a feature-first structure under `lib/src/` with shared UI helpers in `core/` and feature folders for `lyrics_scroller`, `preferences`, `song_groups`, and `song_loader`.
+The codebase is organized in a feature-first structure under `lib/src/` with shared UI helpers in `core/` and feature folders for `chordpro_editor`, `lyrics_scroller`, `preferences`, `song_groups`, and `song_loader`.
 
-ChordPro editing, Song Charts, Metadata, and Data Import and Export remain planned. The implemented architecture includes a recursively scanned song library, persisted access state, gig/set validation, broken-link handling, and performance set mode.
+Full ChordPro 6.101 behavior, Song Charts, Metadata, and Data Import and Export remain planned. The implemented architecture includes a recursively scanned song library, persisted access state, gig/set validation, broken-link handling, and performance set mode.
 
 ---
 
@@ -24,13 +24,13 @@ The application is structured into five primary vertical tiers:
 
 ```text
 Presentation Layer
-  - Views: MainView, GigsPanelView, SongView, PreferenceView
+  - Views: MainView, GigsPanelView, SongView, ChordProEditorView, PreferenceView
   - Widgets: AutoScrollableTextWidget, custom tooltip widgets
   - Reads and writes Riverpod state
 
 Navigation & Routing
   - appRouterProvider (GoRouter)
-  - Nested named routes for main, lyrics, and preferences
+  - Nested named routes for main, lyrics, preferences, and editor
   - Lyrics route guarded by required `Song` payload
 
 State Management & Logic
@@ -45,6 +45,7 @@ Services & Infrastructure
   - SongRepository + SongFileReader; MainView coordinates library-root selection and scanning
   - Platform-specific directory access and persisted access capabilities
   - GigRepository / SqliteGigRepository (native SQLite and legacy JSON migration)
+  - ChordProSongStore (native song-file writes; Android SAF write channel)
 
 Domain Models
   - Song, SongFile, SongRepository, Gig, SongSet, GigSong, GigRepository, AutoScrollableText (Freezed), SongFormattingResult, AppTheme
@@ -66,6 +67,11 @@ Domain Models
 - **`GigsPanelView` (`lib/src/features/song_groups/presentation/views/gigs_panel_view.dart`)**
   - Presents gig/set selection, editing, reordering, and song assignment, including missing-song recovery.
   - `GigsController` holds selected gig, set, and active song indices; previous/next navigation crosses set boundaries without wrapping after the last set.
+
+- **`ChordProEditorView` (`lib/src/features/chordpro_editor/presentation/views/chordpro_editor_view.dart`)**
+  - Edits raw ChordPro source with live `SongTextRenderer` preview, a directive/section outline, draggable chord/directive insertion, and section reordering.
+  - `ChordProDocument` preserves source text and performs conservative, explicit conversion; `ChordProSongStore` writes a separate `.chopro` for converted text while leaving the source intact.
+  - A dirty-editor guard prompts Save, Discard, or Cancel. Full ChordPro 6.101 rendering compatibility and Android SAF write behavior still need verification.
 
 - **`SongView` (`lib/src/features/lyrics_scroller/presentation/views/song_view.dart`)**
   - The primary performance display.

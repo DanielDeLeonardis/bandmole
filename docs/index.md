@@ -13,7 +13,7 @@ Start here if you want the quickest path into the plan:
 
 This repository implements Release 1 (Songs Panel and lyrics performance) and Release 2 (Song Groups). The app now includes gigs and sets, native SQLite persistence, relative song references, broken-link recovery, and a locked performance set mode with a **Close set** action.
 
-Release 3 onward remains planned product work. The roadmap and PRD distinguish those future requirements from the implemented first two releases.
+Release 3 ChordPro editing is in progress; Releases 4–6 remain planned product work. The roadmap and PRD distinguish this work in progress from implemented and future requirements.
 
 ## What Each Document Is For
 

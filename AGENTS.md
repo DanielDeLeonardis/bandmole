@@ -4,9 +4,9 @@ Use this as a quick orientation; the linked documents are the source of truth fo
 
 ## Project and stack
 
-- Offline-first Flutter app for musicians. Releases 1 (Songs Panel/lyrics performance) and 2 (gigs and sets) are implemented; Releases 3–6 are planned. See [roadmap](docs/roadmap.md) and [requirements](docs/requirements.md).
+- Offline-first Flutter app for musicians. Releases 1 (Songs Panel/lyrics performance) and 2 (gigs and sets) are implemented; Release 3 editing is in progress; Releases 4–6 are planned. See [roadmap](docs/roadmap.md) and [requirements](docs/requirements.md).
 - Flutter `3.47.1` is pinned in `.fvmrc`; Dart SDK constraint is `^3.13.1`. Use the pinned toolchain and `pubspec.yaml` for exact dependencies.
-- Feature-first code lives in `lib/src/features/` (`song_loader`, `lyrics_scroller`, `song_groups`, `preferences`), with presentation/domain/data boundaries where applicable. See [architecture](docs/architecture.md).
+- Feature-first code lives in `lib/src/features/` (`song_loader`, `lyrics_scroller`, `song_groups`, `chordpro_editor`, `preferences`), with presentation/domain/data boundaries where applicable. See [architecture](docs/architecture.md).
 - Riverpod manages state; Freezed models immutable data; GoRouter/`MaterialApp.router` provide declarative routes. The active performance song is embedded in `MainView`.
 - `shared_preferences` stores small settings; native gigs/sets use SQLite (`sqflite`/`sqflite_common_ffi`) behind `GigRepository`, including legacy JSON migration. Song files stay in the user-selected library, not the database.
 
@@ -30,5 +30,5 @@ Summarized from [Cross-Cutting Technical Requirements](docs/requirements.md#cros
 
 - Prefer focused changes within the existing feature layers. For generated Freezed/Riverpod code, use `dart run build_runner build` when model/provider declarations change.
 - Run targeted tests first, then `flutter test` and `dart analyze` when practical. CI also runs `flutter test --coverage --branch-coverage` and `dart run tool/check_coverage.dart`; the gate requires LCOV `BRDA` records. See [README testing](README.md#testing--static-analysis).
-- Desktop integration workflows are `integration_test/release_1_workflow_test.dart` and `integration_test/release_2_workflow_test.dart` (for example, `flutter test integration_test/release_2_workflow_test.dart -d windows`). Do not substitute widget tests for native picker, restart, or accessibility verification.
+- Desktop integration workflows are `integration_test/release_1_workflow_test.dart`, `integration_test/release_2_workflow_test.dart`, and `integration_test/release_3_workflow_test.dart` (for example, `flutter test integration_test/release_2_workflow_test.dart -d windows`). Do not substitute widget tests for native picker, restart, or accessibility verification.
 - Follow the relevant [requirements](docs/requirements.md), [architecture](docs/architecture.md), and [changelog](CHANGELOG.md) when behavior changes; update documentation alongside code rather than inventing completed status.

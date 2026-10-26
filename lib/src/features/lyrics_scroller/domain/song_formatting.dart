@@ -10,6 +10,7 @@ class SongFormattingResult {
     this.artist,
     this.key,
     this.capo,
+    this.chordDefinitions = const [],
   });
 
   final String rawText;
@@ -20,6 +21,7 @@ class SongFormattingResult {
   final String? key;
   final int? capo;
   final List<SongSection> sections;
+  final List<SongChordDefinition> chordDefinitions;
 }
 
 class SongSection {
@@ -50,6 +52,33 @@ class SongLineSegment {
 
   final String? chord;
   final String lyric;
+}
+
+class SongChordDefinition {
+  const SongChordDefinition({
+    required this.name,
+    required this.baseFret,
+    required this.frets,
+    required this.diagramEnabled,
+    this.displayName,
+    this.fingers = const [],
+    this.keys = const [],
+  });
+
+  final String name;
+  final String? displayName;
+  final int baseFret;
+  final List<String> frets;
+  final List<String> fingers;
+  final List<int> keys;
+  final bool diagramEnabled;
+
+  String get label {
+    final display = displayName?.trim();
+    return display == null || display.isEmpty ? name : display;
+  }
+
+  bool get hasDiagram => diagramEnabled && (frets.isNotEmpty || keys.isNotEmpty);
 }
 
 class SongFormatter {
@@ -84,16 +113,34 @@ class SongFormatter {
   ];
 
   static final RegExp _directiveRegExp = RegExp(
-    r'^\{([^:}]+)(?::\s*([^}]*))?\}$',
+    r'^\{([^:}\s]+)(?:(?::\s*|\s+)([^}]*))?\}$',
   );
   static final RegExp _noteRegExp = RegExp(r'^([A-G])([#b]?)(.*)$');
+  static final RegExp _defineTokenRegExp = RegExp("\"[^\"]*\"|'[^']*'|\\S+");
+  static const Set<String> _defineKeywords = <String>{
+    'base-fret',
+    'base_fret',
+    'frets',
+    'fingers',
+    'keys',
+    'diagram',
+    'display',
+    'copy',
+    'copyall',
+    'format',
+  };
 
   static SongFormattingResult parse(
     String rawText, {
     int transposeSemitones = 0,
   }) {
-    final normalizedText = rawText.replaceAll('\r\n', '\n');
+    final normalizedText = rawText
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n');
     final lines = normalizedText.split('\n');
+    final hasDirectives = lines.any(
+      (line) => _directiveRegExp.hasMatch(line.trim()),
+    );
     final sections = <SongSection>[];
     final builder = _SongSectionBuilder();
     String? title;
@@ -102,6 +149,8 @@ class SongFormatter {
     String? key;
     int? capo;
     var hasRichFormatting = false;
+    final definedChords = <String, SongChordDefinition>{};
+    final definedChordOrder = <String>[];
 
     void flushSection() {
       final section = builder.build();
@@ -112,6 +161,9 @@ class SongFormatter {
 
     for (final rawLine in lines) {
       final line = rawLine.trimRight();
+      if (hasDirectives && line.trimLeft().startsWith('#')) {
+        continue;
+      }
       if (line.trim().isEmpty) {
         flushSection();
         builder.reset();
@@ -122,6 +174,17 @@ class SongFormatter {
       if (directiveMatch != null) {
         final directive = directiveMatch.group(1)?.trim().toLowerCase();
         final value = directiveMatch.group(2)?.trim();
+
+        if (directive != null && (directive == 'define' || directive.startsWith('define-'))) {
+          final definition = _parseChordDefinition(value ?? '', definedChords);
+          if (definition != null) {
+            definedChords[definition.name] = definition;
+            definedChordOrder.remove(definition.name);
+            definedChordOrder.add(definition.name);
+          }
+          hasRichFormatting = true;
+          continue;
+        }
 
         switch (directive) {
           case 'title':
@@ -147,7 +210,10 @@ class SongFormatter {
           case 'soc':
           case 'start_of_chorus':
             flushSection();
-            builder.reset(type: SongSectionType.chorus, label: 'Chorus');
+            builder.reset(
+              type: SongSectionType.chorus,
+              label: _sectionLabel(value, 'Chorus'),
+            );
             hasRichFormatting = true;
             continue;
           case 'eoc':
@@ -159,7 +225,10 @@ class SongFormatter {
           case 'start_of_verse':
           case 'sov':
             flushSection();
-            builder.reset(type: SongSectionType.verse, label: 'Verse');
+            builder.reset(
+              type: SongSectionType.verse,
+              label: _sectionLabel(value, 'Verse'),
+            );
             hasRichFormatting = true;
             continue;
           case 'end_of_verse':
@@ -168,11 +237,16 @@ class SongFormatter {
             builder.reset();
             hasRichFormatting = true;
             continue;
+          case 'sob':
           case 'start_of_bridge':
             flushSection();
-            builder.reset(type: SongSectionType.bridge, label: 'Bridge');
+            builder.reset(
+              type: SongSectionType.bridge,
+              label: _sectionLabel(value, 'Bridge'),
+            );
             hasRichFormatting = true;
             continue;
+          case 'eob':
           case 'end_of_bridge':
             flushSection();
             builder.reset();
@@ -215,6 +289,8 @@ class SongFormatter {
             hasRichFormatting = true;
             continue;
         }
+        hasRichFormatting = true;
+        continue;
       }
 
       final parsedLine = _SongFormatterLineParser.parseLine(
@@ -244,7 +320,148 @@ class SongFormatter {
       key: key,
       capo: capo,
       sections: sections,
+      chordDefinitions: definedChordOrder
+          .map((name) => definedChords[name]!)
+          .toList(growable: false),
     );
+  }
+
+  static String _sectionLabel(String? value, String fallback) {
+    var label = value?.trim() ?? '';
+    if (label.isEmpty) return fallback;
+    if (label.startsWith('label=')) {
+      label = label.substring('label='.length);
+    }
+    return label.replaceAll('"', '');
+  }
+
+  static SongChordDefinition? _parseChordDefinition(
+    String value,
+    Map<String, SongChordDefinition> knownDefinitions,
+  ) {
+    final tokens = _defineTokenRegExp
+        .allMatches(value)
+        .map((match) => _stripDefineToken(match.group(0)!))
+        .where((token) => token.isNotEmpty)
+        .toList(growable: false);
+    if (tokens.isEmpty) {
+      return null;
+    }
+
+    final name = _stripDefineToken(tokens.first);
+    var baseFret = 1;
+    var diagramEnabled = true;
+    String? displayName;
+    final frets = <String>[];
+    final fingers = <String>[];
+    final keys = <int>[];
+
+    var index = 1;
+    while (index < tokens.length) {
+      final keyword = tokens[index++].toLowerCase();
+      switch (keyword) {
+        case 'base-fret':
+        case 'base_fret':
+          if (index < tokens.length) {
+            baseFret = int.tryParse(tokens[index++]) ?? baseFret;
+          }
+          break;
+        case 'frets':
+          frets.clear();
+          index = _collectDefineValues(tokens, index, frets);
+          break;
+        case 'fingers':
+          fingers.clear();
+          index = _collectDefineValues(tokens, index, fingers);
+          break;
+        case 'keys':
+          keys.clear();
+          while (index < tokens.length &&
+              !_defineKeywords.contains(tokens[index].toLowerCase())) {
+            final key = int.tryParse(tokens[index++]);
+            if (key != null) keys.add(key);
+          }
+          break;
+        case 'copy':
+        case 'copyall':
+          if (index < tokens.length) {
+            final source = knownDefinitions[_stripDefineToken(tokens[index++])];
+            if (source != null) {
+              baseFret = source.baseFret;
+              diagramEnabled = source.diagramEnabled;
+              frets
+                ..clear()
+                ..addAll(source.frets);
+              fingers
+                ..clear()
+                ..addAll(source.fingers);
+              keys
+                ..clear()
+                ..addAll(source.keys);
+              if (keyword == 'copyall') {
+                displayName = source.displayName;
+              }
+            }
+          }
+          break;
+        case 'diagram':
+          if (index < tokens.length) {
+            diagramEnabled = tokens[index++].toLowerCase() != 'off';
+          }
+          break;
+        case 'display':
+          if (index < tokens.length) {
+            displayName = tokens[index++];
+          }
+          break;
+        case 'format':
+          index = tokens.length;
+          break;
+      }
+    }
+
+    return SongChordDefinition(
+      name: name,
+      displayName: displayName,
+      baseFret: baseFret,
+      frets: List<String>.unmodifiable(frets),
+      fingers: List<String>.unmodifiable(fingers),
+      keys: List<int>.unmodifiable(keys),
+      diagramEnabled: diagramEnabled,
+    );
+  }
+
+  static int _collectDefineValues(
+    List<String> tokens,
+    int index,
+    List<String> values,
+  ) {
+    while (index < tokens.length &&
+        !_defineKeywords.contains(tokens[index].toLowerCase())) {
+      values.addAll(_splitDefineValue(tokens[index++]));
+    }
+    return index;
+  }
+
+  static List<String> _splitDefineValue(String token) {
+    if (!token.contains('-')) {
+      return <String>[token];
+    }
+    return token
+        .split('-')
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  static String _stripDefineToken(String token) {
+    if (token.length >= 2 &&
+        ((token.startsWith('"') && token.endsWith('"')) ||
+            (token.startsWith('\'') && token.endsWith('\'')) ||
+            (token.startsWith('[') && token.endsWith(']')))) {
+      return token.substring(1, token.length - 1);
+    }
+    return token;
   }
 
   static String transposeChord(String chord, int semitones) {

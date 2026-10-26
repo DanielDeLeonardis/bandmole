@@ -36,6 +36,18 @@ void main() {
     expect(container.read(autoScrollableTextProvider).textFontSize, equals(8.0));
   });
 
+  test('Custom scroll speed uses the supported range', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(autoScrollableTextProvider.notifier);
+
+    notifier.setScrollSpeed(12);
+    expect(container.read(autoScrollableTextProvider).scrollSpeed, 12);
+    notifier.setScrollSpeed(200);
+    expect(container.read(autoScrollableTextProvider).scrollSpeed, 99);
+    notifier.setScrollSpeed(0);
+    expect(container.read(autoScrollableTextProvider).scrollSpeed, 1);
+  });
   test('Scroll speed bounds check (1 to 99)', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);

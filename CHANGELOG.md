@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Release 3: ChordPro Editor (in progress)**:
+  - Added source editing, live preview, directive/section outline, chord and directive palettes, section reordering, and unsaved-change protection.
+  - Added conservative explicit text-to-ChordPro conversion, separate `.chopro` saves, custom directive names, `scroll_speed`, and persisted hint dismissal.
+  - Added native file saves (including an Android SAF write path) and focused domain, storage, widget, and desktop integration tests; full 6.101 semantics and device verification remain open.
 - **Release 2: Song Groups**:
   - Added gig and set creation, editing, ordering, and song assignment with normalized title uniqueness and duplicate-song validation across a gig.
   - Added native SQLite persistence for gigs and sets, including migration of legacy JSON gig records.

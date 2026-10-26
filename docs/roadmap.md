@@ -49,7 +49,7 @@ Success signal:
 
 ### Release 3: ChordPro Editor
 
-Status: planned.
+Status: in progress; core editor flow exists, but complete ChordPro 6.101 semantics and platform verification remain open.
 
 Goal:
 - Create and edit ChordPro songs with preview, outline, and conversion support.

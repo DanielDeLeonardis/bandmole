@@ -1,5 +1,9 @@
 import 'dart:io';
 
+import 'package:bandmole/src/features/chordpro_editor/domain/chordpro_document.dart';
+import 'package:bandmole/src/features/chordpro_editor/presentation/views/chordpro_editor_view.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/auto_scrollable_text_provider.dart';
+
 import 'package:bandmole/src/features/lyrics_scroller/presentation/views/song_view.dart';
 import 'package:bandmole/src/features/song_loader/domain/song.dart';
 import 'package:bandmole/src/features/song_loader/domain/song_file.dart';
@@ -73,7 +77,27 @@ class _MainViewState extends ConsumerState<MainView>
     super.dispose();
   }
 
+  Future<void> _openEditor({bool create = false}) async {
+    final root = _rootDir;
+    if (root == null) return;
+    final savedFile = await context.pushNamed<SongFile>(
+      AppRoutes.editor,
+      extra: ChordProEditorRequest(
+        rootDirectory: root,
+        song: create ? null : _selectedSong,
+      ),
+    );
+    if (!mounted || savedFile == null) return;
+    await _refreshSongs();
+    if (mounted) _onSongTapped(savedFile);
+  }
+
   void _onSongLoaded(Song song) {
+    if (song.text != null) {
+      ref
+          .read(autoScrollableTextProvider.notifier)
+          .setScrollSpeed(ChordProDocument(song.text!).scrollSpeed);
+    }
     setState(() => _selectedSong = song);
     if (MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint) {
       _widePanelTabController.animateTo(0);
@@ -634,6 +658,24 @@ class _MainViewState extends ConsumerState<MainView>
                   tooltip: l10n.chooseSongLibraryFolder,
                   icon: const Icon(Icons.folder_open),
                   onPressed: _pickLibraryRoot,
+                ),
+                IconButton(
+                  key: const ValueKey<String>('new_chordpro_button'),
+                  tooltip: l10n.editorNewSong,
+                  icon: const Icon(Icons.note_add),
+                  onPressed: _rootDir == null
+                      ? null
+                      : () => _openEditor(create: true),
+                ),
+                IconButton(
+                  key: const ValueKey<String>('edit_chordpro_button'),
+                  tooltip: _selectedSong?.file.isChordPro == true
+                      ? l10n.editorEditSong
+                      : l10n.editorConvertSong,
+                  icon: const Icon(Icons.edit_note),
+                  onPressed: _rootDir == null || _selectedSong?.text == null
+                      ? null
+                      : _openEditor,
                 ),
                 IconButton(
                   tooltip: l10n.preferences,

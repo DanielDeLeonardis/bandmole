@@ -22,7 +22,7 @@ class MainActivity : FlutterActivity() {
 						pendingPickResult = result
 						startActivityForResult(
 							Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
-								addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+								addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
 								addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
 								call.argument<String>("initialUri")?.let {
 									putExtra("android.provider.extra.INITIAL_URI", Uri.parse(it))
@@ -33,6 +33,7 @@ class MainActivity : FlutterActivity() {
 					}
 					"scan" -> scan(call.argument<String>("treeUri"), result)
 					"read" -> read(call.argument<String>("uri"), result)
+					"writeSong" -> writeSong(call.argument<String>("uri"), call.argument<String>("treeUri"), call.argument<String>("relativePath"), call.argument<String>("text"), result)
 					else -> result.notImplemented()
 				}
 			}
@@ -51,7 +52,7 @@ class MainActivity : FlutterActivity() {
 		try {
 			contentResolver.takePersistableUriPermission(
 				uri,
-				Intent.FLAG_GRANT_READ_URI_PERMISSION,
+				data.flags and (Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION),
 			)
 			result.success(uri.toString())
 		} catch (error: SecurityException) {
@@ -119,6 +120,88 @@ class MainActivity : FlutterActivity() {
 		}
 	}
 
+	private fun writeSong(
+		uriString: String?,
+		treeUriString: String?,
+		relativePath: String?,
+		text: String?,
+		result: MethodChannel.Result,
+	) {
+		if (text == null) {
+			result.error("INVALID_TEXT", "Missing song text", null)
+			return
+		}
+		var createdUri: Uri? = null
+		try {
+			val destination = if (uriString != null) {
+				Uri.parse(uriString)
+			} else {
+				if (treeUriString == null || relativePath == null) {
+					result.error("INVALID_URI", "Missing song destination", null)
+					return
+				}
+				val components = relativePath.split("/")
+				if (components.isEmpty() || components.any { it.isEmpty() || it == "." || it == ".." } ||
+					!components.last().endsWith(".chopro", ignoreCase = true)) {
+					result.error("INVALID_PATH", "Invalid ChordPro destination", null)
+					return
+				}
+				val treeUri = Uri.parse(treeUriString)
+				var parentId = DocumentsContract.getTreeDocumentId(treeUri)
+				for (folder in components.dropLast(1)) {
+					val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId)
+					var foundId: String? = null
+					contentResolver.query(
+						childrenUri,
+						arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME, DocumentsContract.Document.COLUMN_MIME_TYPE),
+						null,
+						null,
+						null,
+					)?.use { cursor ->
+						val idIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+						val nameIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+						val mimeIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
+						while (cursor.moveToNext()) {
+							if (cursor.getString(nameIndex) == folder &&
+								cursor.getString(mimeIndex) == DocumentsContract.Document.MIME_TYPE_DIR) {
+								foundId = cursor.getString(idIndex)
+								break
+							}
+						}
+					}
+					parentId = foundId ?: throw IllegalArgumentException("Song folder is unavailable")
+				}
+				val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId)
+				contentResolver.query(
+					childrenUri,
+					arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME),
+					null,
+					null,
+					null,
+				)?.use { cursor ->
+					val nameIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+					while (cursor.moveToNext()) {
+						if (cursor.getString(nameIndex).equals(components.last(), ignoreCase = true)) {
+							throw IllegalStateException("Song file already exists")
+						}
+					}
+				}
+				val parentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, parentId)
+				DocumentsContract.createDocument(contentResolver, parentUri, "text/plain", components.last())
+					?: throw IllegalStateException("Unable to create song")
+			}
+			if (uriString == null) createdUri = destination
+			contentResolver.openOutputStream(destination, "wt").use { output ->
+				(output ?: throw IllegalStateException("Unable to open song")).write(text.toByteArray(Charsets.UTF_8))
+			}
+			result.success(destination.toString())
+		} catch (error: Exception) {
+			createdUri?.let {
+				try { DocumentsContract.deleteDocument(contentResolver, it) } catch (_: Exception) {}
+			}
+			result.error("WRITE", "Unable to save song", error.message)
+		}
+	}
 	private fun supported(name: String): Boolean {
 		val lowerName = name.lowercase()
 		return listOf(".cho", ".crd", ".chopro", ".chordpro", ".pro", ".txt")

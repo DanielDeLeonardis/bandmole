@@ -133,6 +133,8 @@ Failure cases and edge cases:
 
 ## Release 3: ChordPro Editor
 
+Status: in progress. The editor, conservative conversion, raw-source preservation, native save path, preview, outline, palettes, custom-directive insertion, and unsaved-change prompt are implemented. Full ChordPro 6.101 rendering semantics, Android SAF write validation, and a passing coverage report remain to be verified.
+
 ### Goal
 
 Create, edit, preview, and save songs in ChordPro format with minimal manual cleanup.

@@ -56,7 +56,7 @@ When `jumpToStart()` is called, the notifier sets `pendingCommand = ScrollComman
 Implemented in the current codebase.
 
 ### Result
-The implemented app lives under a feature-first tree in `lib/src/`; future releases should extend the same structure for ChordPro editing, Song Charts, Metadata, and Data Import and Export:
+The implemented app lives under a feature-first tree in `lib/src/`; the in-progress ChordPro editor and future releases extend the same structure for Song Charts, Metadata, and Data Import and Export:
 
 ```text
 lib/
@@ -65,6 +65,10 @@ lib/
 |   |-- core/
 |   |   `-- widgets/
 |   |-- features/
+|   |   |-- chordpro_editor/
+|   |   |   |-- data/
+|   |   |   |-- domain/
+|   |   |   `-- presentation/
 |   |   |-- lyrics_scroller/
 |   |   |   |-- domain/
 |   |   |   `-- presentation/

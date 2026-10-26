@@ -47,6 +47,64 @@ how [D]sweet the [G]sound
     expect(chorus.lines.single.segments.first.chord, 'D');
   });
 
+  test('SongFormatter does not render define directives as lyrics', () {
+    final result = SongFormatter.parse(
+      '{define: Am7 frets 0 0 2 0 1 0}\n{define: D7 base-fret 3 frets x 3 2 3 1 x}\n[C]Hello',
+    );
+    expect(result.hasRichFormatting, isTrue);
+    expect(result.chordDefinitions, hasLength(2));
+    expect(result.chordDefinitions.first.name, 'Am7');
+    expect(result.chordDefinitions.first.frets, ['0', '0', '2', '0', '1', '0']);
+    expect(result.chordDefinitions.last.baseFret, 3);
+    expect(result.sections.single.lines.single.plainText, 'Hello');
+  });
+
+  test('SongFormatter parses selector-style define directives', () {
+    final result = SongFormatter.parse(
+      '{define-guitar: Am7 frets 0 0 2 0 1 0 fingers 0 0 2 0 1 0}\n[C]Hello',
+    );
+
+    expect(result.chordDefinitions, hasLength(1));
+    expect(result.chordDefinitions.single.name, 'Am7');
+    expect(result.chordDefinitions.single.fingers, ['0', '0', '2', '0', '1', '0']);
+  });
+
+  test('SongFormatter parses bracketed slash chords with hyphenated frets', () {
+    final result = SongFormatter.parse(
+      '{define: [F#/G#] base-fret 1 frets  4-x-4-3-2-2}\n'
+      '{define: C#/G# base-fret 1 frets 4-x-6-6-6-4}\n'
+      '{define: D#m/G# base-fret 1 frets 4-x-4-3-4-x}\n'
+      '{define: G#m7 base-fret 1 frets 4-6-4-4-4-4}\n[C]Hello',
+    );
+
+    expect(result.chordDefinitions, hasLength(4));
+    expect(result.chordDefinitions.first.name, 'F#/G#');
+    expect(result.chordDefinitions.first.frets, ['4', 'x', '4', '3', '2', '2']);
+    expect(result.chordDefinitions[1].name, 'C#/G#');
+    expect(result.chordDefinitions[2].name, 'D#m/G#');
+    expect(result.chordDefinitions.last.name, 'G#m7');
+    expect(result.chordDefinitions.last.frets, ['4', '6', '4', '4', '4', '4']);
+    expect(result.sections.single.lines.single.plainText, 'Hello');
+  });
+
+  test('SongFormatter copies chord diagrams from earlier definitions', () {
+    final result = SongFormatter.parse(
+      '{define: Am7 frets 0 0 2 0 1 0 fingers 0 0 2 0 1 0}\n{define: Am7sus4 copy Am7 frets 0 0 2 2 1 0}\n[C]Hello',
+    );
+
+    expect(result.chordDefinitions, hasLength(2));
+    expect(result.chordDefinitions.last.name, 'Am7sus4');
+    expect(result.chordDefinitions.last.frets, ['0', '0', '2', '2', '1', '0']);
+    expect(result.chordDefinitions.last.fingers, ['0', '0', '2', '0', '1', '0']);
+  });
+
+  test('SongFormatter uses a labeled section in the preview', () {
+    final result = SongFormatter.parse(
+      '{sov: label="Verse 1"}\n[C]Hello\n{eov}',
+    );
+    expect(result.sections.single.label, 'Verse 1');
+  });
+
   test('SongFormatter.transposeChord preserves suffixes and slash chords', () {
     expect(SongFormatter.transposeChord('Bbmaj7/F', 2), 'Cmaj7/G');
     expect(SongFormatter.transposeChord('Gm7', -2), 'Fm7');

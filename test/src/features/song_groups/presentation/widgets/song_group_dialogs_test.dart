@@ -1,4 +1,3 @@
-import 'package:bandmole/l10n/app_localizations_fallback.dart';
 import 'package:bandmole/src/features/song_groups/domain/gig_song.dart';
 import 'package:bandmole/src/features/song_groups/domain/song_set.dart';
 import 'package:bandmole/src/features/song_groups/presentation/widgets/set_editor_dialog.dart';

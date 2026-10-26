@@ -14,7 +14,7 @@ BandMole is a Flutter application designed for musicians and performers to displ
 
 BandMole implements Release 1 (Songs Panel and lyrics performance) and Release 2 (Song Groups). The app includes a recursively scanned song library, persisted root selection, Android Storage Access Framework access, lyric scrolling, and native gigs and sets backed by SQLite.
 
-ChordPro editing, Song Charts, Metadata, and Data Import/Export remain planned. See the [roadmap](docs/roadmap.md) for their scope.
+A Release 3 ChordPro editor is in progress; Song Charts, Metadata, and Data Import/Export remain planned. See the [roadmap](docs/roadmap.md) for their scope.
 
 ---
 
@@ -47,12 +47,17 @@ ChordPro editing, Song Charts, Metadata, and Data Import/Export remain planned. 
   - Keep song assignments relative to the selected library root; show missing songs as broken links that can be removed or relinked.
   - Open a gig song in performance set mode with previous/next navigation across sets. While a set is open, the Songs library and panel tabs are locked; **Close set** restores normal navigation.
 
+- **ChordPro Editor (Release 3, in progress)**:
+  - Create or edit ChordPro songs, preview formatted lyrics and chords, inspect directives and sections, and insert chords/directives from a draggable palette.
+  - Convert plain-text chord sheets explicitly and save a separate `.chopro` file while leaving the source unchanged. Save/Discard/Cancel protects unsaved edits.
+  - Native saves, custom-directive names, and dismissed hints persist locally. Full ChordPro 6.101 rendering semantics and Android SAF write verification remain open.
+
 - **Theme Preferences**:
   - Customizable color themes, including dark themes optimized for low-light stage performance.
   - Asynchronous theme persistence via local preferences.
 
 - **Declarative Navigation**:
-  - Centralized route handling with `GoRouter` and nested named routes for the main screen, lyrics view, and preferences view.
+  - Centralized route handling with `GoRouter` and nested named routes for the main screen, lyrics view, preferences view, and editor.
   - The lyrics route expects a `Song` payload and redirects back home if it is opened without one.
   - Preferences and the standalone lyrics route use `MaterialApp.router`; the active song is displayed inside `MainView`.
 
@@ -81,6 +86,7 @@ lib/
     |       |-- tool_tip_raised_button_widget.dart
     |       `-- tool_tip_rounded_text_widget.dart
     |-- features/
+        |-- chordpro_editor/       # Source editing, conversion, and native saves
         |-- lyrics_scroller/
         |   |-- domain/
         |   |   |-- auto_scrollable_text.dart
@@ -198,7 +204,13 @@ Run the Release 2 gig/set workflow on Windows:
 ```bash
 flutter test integration_test/release_2_workflow_test.dart -d windows
 ```
-This exercises setlist interactions, repository reopening, and keyboard navigation. The 80% branch-coverage gate is a target, not a percentage asserted by this README.
+This exercises setlist interactions, repository reopening, and keyboard navigation.
+
+Run the Release 3 desktop editor round-trip:
+```bash
+flutter test integration_test/release_3_workflow_test.dart -d windows
+```
+The 80% branch-coverage gate is a target, not a percentage asserted by this README.
 
 Android library access uses a persisted Storage Access Framework tree grant. The
 device workflow should select a shared-storage folder, verify nested song
