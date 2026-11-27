@@ -4,7 +4,7 @@
 
 This roadmap turns the full requirements into a release sequence that is easier to scan at a glance. It keeps the same feature ordering as the requirements document, but trims the detail down to release goals, dependencies, and completion signals.
 
-Each feature area is delivered as a separate release for the first-release platforms. Releases 1 and 2 are implemented in the current codebase; Releases 3–6 remain planned. Success signals below describe product goals and do not assert that every platform-specific acceptance check has been independently verified.
+Each feature area is delivered as a separate release for the first-release platforms. Releases 1 and 2 are implemented, Release 3 (ChordPro Editor) is implemented on desktop with Android SAF device write verification still open, and Releases 4–6 remain planned. Success signals below describe product goals and do not assert that every platform-specific acceptance check has been independently verified.
 
 ## Release Sequence
 
@@ -49,7 +49,7 @@ Success signal:
 
 ### Release 3: ChordPro Editor
 
-Status: in progress; core editor flow exists, but complete ChordPro 6.101 semantics and platform verification remain open.
+Status: implemented on desktop; Android SAF device write verification remains open. See [Release 3 Technical Debt](release_3_tech_debt.md).
 
 Goal:
 - Create and edit ChordPro songs with preview, outline, and conversion support.
@@ -60,7 +60,8 @@ Depends on:
 - Directive parsing and formatting
 
 Success signal:
-- Users can author or convert songs with minimal cleanup and save valid ChordPro output.
+- Users can author or explicitly convert plain-text songs (kept read-only until converted) with minimal cleanup, explicit overwrite confirmation, and valid ChordPro 6.101 output.
+- Global custom directives persist in native SQLite, keyboard shortcuts/reordering work on desktop, and saving a new `.chopro` clears matching gig broken links.
 
 ### Release 4: Song Charts
 

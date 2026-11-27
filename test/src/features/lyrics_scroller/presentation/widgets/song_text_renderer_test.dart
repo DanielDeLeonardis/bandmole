@@ -223,4 +223,69 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('One section'), findsOneWidget);
   });
+
+  testWidgets('renders Release 3 metadata, styling, bottom/inline/keyboard diagrams, comments, and chord-only lines', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+
+    final song = SongFormatter.parse('''
+{title: Styled Song}
+{subtitle: Sub 1}
+{subtitle: Sub 2}
+{album: Album Name}
+{year: 2026}
+{composer: Comp}
+{lyricist: Lyr}
+{arranger: Arr}
+{tempo: 110}
+{time: 3/4}
+{duration: 4:00}
+{titlecolour: #0f0}
+{chordcolour: red}
+{diagrams: bottom}
+{define: PianoC keys 0 4 7 12}
+{start_of_chorus}
+[C][G][Am]
+{end_of_chorus}
+{chord: PianoC}
+{c: Note}
+{ci: Italic}
+{cb: Boxed}
+''');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SongTextRenderer(song: song, fontSize: 18),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Styled Song'), findsOneWidget);
+    expect(find.text('Sub 1'), findsOneWidget);
+    expect(find.text('Sub 2'), findsOneWidget);
+    expect(find.text('Album: Album Name'), findsOneWidget);
+    expect(find.text('Year: 2026'), findsOneWidget);
+    expect(find.text('Composer: Comp'), findsOneWidget);
+    expect(find.text('Lyricist: Lyr'), findsOneWidget);
+    expect(find.text('Arranger: Arr'), findsOneWidget);
+    expect(find.text('Tempo: 110'), findsOneWidget);
+    expect(find.text('Time: 3/4'), findsOneWidget);
+    expect(find.text('Duration: 4:00'), findsOneWidget);
+    expect(find.text('C'), findsOneWidget);
+    expect(find.text('G'), findsOneWidget);
+    expect(find.text('Am'), findsOneWidget);
+    expect(find.text('Note'), findsOneWidget);
+    expect(find.text('Italic'), findsOneWidget);
+    expect(find.text('Boxed'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('song_text_renderer_bottom_diagrams')),
+      findsOneWidget,
+    );
+  });
 }

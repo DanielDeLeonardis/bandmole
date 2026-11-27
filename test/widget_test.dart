@@ -1,4 +1,9 @@
 import 'package:bandmole/main.dart';
+import 'package:bandmole/src/features/chordpro_editor/data/sqlite_chordpro_preferences_repository.dart';
+import 'package:bandmole/src/features/chordpro_editor/presentation/providers/chordpro_preferences_provider.dart';
+import 'package:bandmole/src/features/chordpro_editor/presentation/views/chordpro_editor_view.dart';
+import 'package:bandmole/src/features/song_loader/domain/song.dart';
+import 'package:bandmole/src/features/song_loader/domain/song_file.dart';
 import 'package:bandmole/src/navigation/app_router.dart';
 import 'package:bandmole/src/features/preferences/presentation/views/preferences_view.dart';
 import 'package:bandmole/src/features/preferences/domain/app_themes.dart';
@@ -31,10 +36,33 @@ void main() {
     expect(find.text('Songs'), findsOneWidget);
   });
 
+  testWidgets(
+    'MyApp excludes semantics at root on Windows to avoid AXTree errors',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const ProviderScope(child: MyApp()));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.ancestor(
+          of: find.byType(MaterialApp),
+          matching: find.byType(ExcludeSemantics),
+        ),
+        findsOneWidget,
+      );
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.windows),
+  );
+
   testWidgets('Lyrics route redirects to home when song payload is missing', (
     WidgetTester tester,
   ) async {
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: [
+        chordProPreferencesRepositoryProvider.overrideWithValue(
+          SharedPreferencesChordProPreferencesRepository(),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
     final router = container.read(appRouterProvider);
@@ -50,6 +78,48 @@ void main() {
     expect(find.text('Song Search'), findsNothing);
     expect(find.text('Songs'), findsOneWidget);
     expect(find.byType(SongView), findsNothing);
+
+    router.go('/editor');
+    await tester.pumpAndSettle();
+    expect(find.text('Songs'), findsOneWidget);
+
+    // Valid /lyrics payload applies ChordPro scroll_speed and defaults to 5 for plain text
+    router.push(
+      '/lyrics',
+      extra: Song(
+        file: const SongFile(path: 'demo.chopro'),
+        text: '{scroll_speed: 14}\n[C]Hello',
+        isMalformed: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(SongView), findsOneWidget);
+    expect(find.text('14', skipOffstage: false), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+
+    router.push(
+      '/lyrics',
+      extra: Song(
+        file: const SongFile(path: 'plain.txt'),
+        text: '{scroll_speed: 19}\nPlain text',
+        isMalformed: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('5', skipOffstage: false), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+
+    // Valid /editor payload opens ChordProEditorView
+    router.push(
+      '/editor',
+      extra: const ChordProEditorRequest(rootDirectory: 'test-library'),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(ChordProEditorView), findsOneWidget);
   });
 
   testWidgets('SongView renders lyrics and control buttons', (

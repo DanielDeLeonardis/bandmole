@@ -4,7 +4,7 @@
 
 BandMole is an offline-first song management and performance app for solo musicians and bands, with the primary focus on an individual musician. Core features must remain available when network access is not available. Network-enabled features should degrade gracefully to offline-only behavior.
 
-> Current implementation status: Releases 1 and 2 are implemented for the song library, lyric playback, and gig/set workflows. Releases 3–6 describe planned product work. See [Release 2 Technical Debt](release_2_tech_debt.md) for cross-cutting verification limits.
+> Current implementation status: Releases 1 and 2 are implemented for the song library, lyric playback, and gig/set workflows; Release 3 (ChordPro Editor) is implemented on desktop with Android SAF device write verification remaining open. Releases 4–6 describe planned product work. See [Release 2 Technical Debt](release_2_tech_debt.md) and [Release 3 Technical Debt](release_3_tech_debt.md) for cross-cutting verification limits.
 
 ## Release Plan
 
@@ -133,7 +133,7 @@ Failure cases and edge cases:
 
 ## Release 3: ChordPro Editor
 
-Status: in progress. The editor, conservative conversion, raw-source preservation, native save path, preview, outline, palettes, custom-directive insertion, and unsaved-change prompt are implemented. Full ChordPro 6.101 rendering semantics, Android SAF write validation, and a passing coverage report remain to be verified.
+Status: implemented on desktop with full Release 3 ChordPro 6.101 directive support, conservative conversion with ambiguity notices, chord and directive palettes, SQLite-backed global and per-song custom directives, keyboard shortcuts and section reordering, read-only plain-text preview prior to conversion, explicit overwrite confirmation, gig broken-link refresh on save, and unsaved-change protection. Android SAF write validation on a physical/emulated Android device remains open; see [Release 3 Technical Debt](release_3_tech_debt.md).
 
 ### Goal
 

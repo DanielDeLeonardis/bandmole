@@ -50,4 +50,37 @@ void main() {
     expect(songs.single.path, 'content://library/document/one');
     expect(songs.single.displayPath, 'Setlist/one.cho');
   });
+
+  test('writes songs through SAF channel and validates returned URI', () async {
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      expect(call.method, 'writeSong');
+      expect(call.arguments, {
+        'uri': null,
+        'treeUri': 'content://library/root',
+        'relativePath': 'song.chopro',
+        'text': '[C]Hello',
+        'overwrite': true,
+      });
+      return 'content://library/document/saved';
+    });
+
+    expect(
+      await const AndroidSafLibrary().writeSong(
+        treeUri: 'content://library/root',
+        relativePath: 'song.chopro',
+        text: '[C]Hello',
+        overwrite: true,
+      ),
+      'content://library/document/saved',
+    );
+
+    messenger.setMockMethodCallHandler(channel, (call) async => null);
+    await expectLater(
+      () => const AndroidSafLibrary().writeSong(
+        uri: 'content://library/document/one',
+        text: '[C]Hello',
+      ),
+      throwsA(isA<StateError>()),
+    );
+  });
 }

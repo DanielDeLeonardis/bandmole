@@ -89,14 +89,22 @@ class _MainViewState extends ConsumerState<MainView>
     );
     if (!mounted || savedFile == null) return;
     await _refreshSongs();
+    if (!mounted) return;
+    await ref
+        .read(gigsControllerProvider.notifier)
+        .loadGigs(
+          rootDirectory: root,
+          availableRelativePaths: _songs.map(_relativeSongPath).toSet(),
+        );
     if (mounted) _onSongTapped(savedFile);
   }
 
   void _onSongLoaded(Song song) {
     if (song.text != null) {
-      ref
-          .read(autoScrollableTextProvider.notifier)
-          .setScrollSpeed(ChordProDocument(song.text!).scrollSpeed);
+      final speed = song.file.isChordPro
+          ? ChordProDocument(song.text!).scrollSpeed
+          : 5;
+      ref.read(autoScrollableTextProvider.notifier).setScrollSpeed(speed);
     }
     setState(() => _selectedSong = song);
     if (MediaQuery.sizeOf(context).width >= _wideLayoutBreakpoint) {

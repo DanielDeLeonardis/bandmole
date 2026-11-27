@@ -699,6 +699,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Line {number}'**
   String editorLine(int number);
+
+  /// No description provided for @editorChords.
+  ///
+  /// In en, this message translates to:
+  /// **'Chords'**
+  String get editorChords;
+
+  /// No description provided for @editorDirectives.
+  ///
+  /// In en, this message translates to:
+  /// **'Directives'**
+  String get editorDirectives;
+
+  /// No description provided for @editorCustomChord.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom chord'**
+  String get editorCustomChord;
+
+  /// No description provided for @editorChordName.
+  ///
+  /// In en, this message translates to:
+  /// **'Chord'**
+  String get editorChordName;
+
+  /// No description provided for @editorInvalidChord.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a chord name.'**
+  String get editorInvalidChord;
+
+  /// No description provided for @editorScopeGlobal.
+  ///
+  /// In en, this message translates to:
+  /// **'Global (all songs)'**
+  String get editorScopeGlobal;
+
+  /// No description provided for @editorScopeSong.
+  ///
+  /// In en, this message translates to:
+  /// **'This song only'**
+  String get editorScopeSong;
+
+  /// No description provided for @editorDuplicateCustomDirective.
+  ///
+  /// In en, this message translates to:
+  /// **'A directive with this name already exists.'**
+  String get editorDuplicateCustomDirective;
+
+  /// No description provided for @editorDeleteCustomDirective.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove custom directive'**
+  String get editorDeleteCustomDirective;
+
+  /// No description provided for @editorReadOnlyBeforeConvert.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain-text source is read-only until you choose Convert to ChordPro.'**
+  String get editorReadOnlyBeforeConvert;
+
+  /// No description provided for @editorOverwriteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite existing file?'**
+  String get editorOverwriteTitle;
+
+  /// No description provided for @editorOverwriteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{path}\" already exists. Do you want to overwrite it?'**
+  String editorOverwriteMessage(String path);
+
+  /// No description provided for @editorOverwrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Overwrite'**
+  String get editorOverwrite;
+
+  /// No description provided for @editorInvalidFilename.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid song filename.'**
+  String get editorInvalidFilename;
+
+  /// No description provided for @editorOutsideLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Song must be inside the selected library.'**
+  String get editorOutsideLibrary;
+
+  /// No description provided for @editorFolderUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The destination song folder is unavailable.'**
+  String get editorFolderUnavailable;
+
+  /// No description provided for @editorWritePermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write permission is required. Choose the song library folder again.'**
+  String get editorWritePermissionRequired;
+
+  /// No description provided for @editorMoveSectionUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move section up'**
+  String get editorMoveSectionUp;
+
+  /// No description provided for @editorMoveSectionDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move section down'**
+  String get editorMoveSectionDown;
+
+  /// No description provided for @editorConversionAmbiguous.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted with {count} line(s) left unchanged for review.'**
+  String editorConversionAmbiguous(int count);
+
+  /// No description provided for @metaKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Key'**
+  String get metaKey;
+
+  /// No description provided for @metaCapo.
+  ///
+  /// In en, this message translates to:
+  /// **'Capo'**
+  String get metaCapo;
+
+  /// No description provided for @metaArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist'**
+  String get metaArtist;
+
+  /// No description provided for @metaAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album'**
+  String get metaAlbum;
+
+  /// No description provided for @metaYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get metaYear;
+
+  /// No description provided for @metaComposer.
+  ///
+  /// In en, this message translates to:
+  /// **'Composer'**
+  String get metaComposer;
+
+  /// No description provided for @metaLyricist.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyricist'**
+  String get metaLyricist;
+
+  /// No description provided for @metaArranger.
+  ///
+  /// In en, this message translates to:
+  /// **'Arranger'**
+  String get metaArranger;
+
+  /// No description provided for @metaTempo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tempo'**
+  String get metaTempo;
+
+  /// No description provided for @metaTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get metaTime;
+
+  /// No description provided for @metaDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get metaDuration;
+
+  /// No description provided for @sectionVerse.
+  ///
+  /// In en, this message translates to:
+  /// **'Verse'**
+  String get sectionVerse;
+
+  /// No description provided for @sectionChorus.
+  ///
+  /// In en, this message translates to:
+  /// **'Chorus'**
+  String get sectionChorus;
+
+  /// No description provided for @sectionBridge.
+  ///
+  /// In en, this message translates to:
+  /// **'Bridge'**
+  String get sectionBridge;
+
+  /// No description provided for @sectionIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Intro'**
+  String get sectionIntro;
+
+  /// No description provided for @sectionOutro.
+  ///
+  /// In en, this message translates to:
+  /// **'Outro'**
+  String get sectionOutro;
+
+  /// No description provided for @sectionTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Tab'**
+  String get sectionTab;
+
+  /// No description provided for @sectionGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Grid'**
+  String get sectionGrid;
 }
 
 class _AppLocalizationsDelegate

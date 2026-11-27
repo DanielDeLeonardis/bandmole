@@ -6,7 +6,7 @@
 
 ## 1. Overview & Objectives
 
-BandMole implements the Release 1 Songs Panel and Release 2 Song Groups workflows. These recommendations record completed structural changes and guidance for the remaining releases, especially the layered Presentation / Domain / Data approach.
+BandMole implements the Release 1 Songs Panel, Release 2 Song Groups, and Release 3 ChordPro Editor (desktop; Android SAF device write verification open) workflows. These recommendations record completed structural changes and guidance for the remaining releases, especially the layered Presentation / Domain / Data approach.
 
 Key goals of these recommendations:
 1. Eliminate redundant state channels between UI components.
@@ -56,7 +56,7 @@ When `jumpToStart()` is called, the notifier sets `pendingCommand = ScrollComman
 Implemented in the current codebase.
 
 ### Result
-The implemented app lives under a feature-first tree in `lib/src/`; the in-progress ChordPro editor and future releases extend the same structure for Song Charts, Metadata, and Data Import and Export:
+The implemented app lives under a feature-first tree in `lib/src/`, including the layered Release 3 `chordpro_editor` feature; future releases extend the same structure for Song Charts, Metadata, and Data Import and Export:
 
 ```text
 lib/
@@ -180,12 +180,13 @@ MyApp
       -> GoRoute(name: main, path: /)
           -> GoRoute(name: lyrics, path: lyrics)
           -> GoRoute(name: preferences, path: preferences)
+          -> GoRoute(name: editor, path: editor)
 ```
 
 Navigation now uses declarative named routes consistently:
-- `MainView` opens preferences with `context.pushNamed(AppRoutes.preferences)`.
+- `MainView` opens preferences with `context.pushNamed(AppRoutes.preferences)` and the ChordPro editor with `context.pushNamed(AppRoutes.editor, extra: ChordProEditorRequest(...))`.
 - `MainView` embeds `SongView` for the active song; a separate guarded lyrics route remains available.
-- `GoRouter` builds `MainView`, `SongView`, and `PreferenceView` from one central route tree, while the lyrics route now rejects requests that do not include a `Song` payload.
+- `GoRouter` builds `MainView`, `SongView`, `PreferenceView`, and `ChordProEditorView` from one central route tree, with payload guards on both `lyrics` (`Song`) and `editor` (`ChordProEditorRequest`).
 
 ---
 
@@ -196,9 +197,9 @@ Implemented in the current codebase.
 
 ### Result
 BandMole now parses chord charts into a richer presentation model before rendering them:
-- `SongFormatter` turns plain lyrics or ChordPro-style source text into structured sections, lyric lines, chord markers, and song metadata.
+- `SongFormatter` turns plain lyrics or ChordPro 6.101 source text into structured sections, lyric lines, chord markers, diagrams, styling directives, `%{meta}` interpolations, and song metadata.
 - `SongTransposeNotifier` lets the view shift chords up or down semitones and reset to concert pitch, while `MainView` and `SongView` keep that control disabled for plain-text songs.
-- `SongTextRenderer` keeps the lyric view responsive by rendering a single-column layout on narrow screens and a two- or three-column layout on wide desktop windows.
+- `SongTextRenderer` localizes app-owned metadata chip labels and default section headings while leaving song content untouched; `AutoScrollableTextWidget` uses single-column rendering (`allowMultiColumnLayout: false`) so auto-scrolling stays predictable for long songs.
 
 This keeps the formatting logic out of the widget tree while still giving musicians a more expressive chord sheet experience.
 
@@ -233,7 +234,7 @@ Implemented in the current codebase.
 ### Result
 The router now groups feature routes beneath the main app route instead of keeping every destination in one flat top-level list.
 
-`lyrics` is also guarded so it only opens when a `Song` payload is present:
+`lyrics` and `editor` are also guarded so they only open when their required payloads (`Song` and `ChordProEditorRequest`) are present:
 
 ```text
 GoRoute(path: '/')
@@ -243,9 +244,12 @@ GoRoute(path: '/')
       -> SongView
   -> GoRoute(path: 'preferences')
       -> PreferenceView
+  -> GoRoute(path: 'editor')
+      -> requires ChordProEditorRequest extra
+      -> ChordProEditorView
 ```
 
-This keeps route ownership clearer, gives the lyrics page a basic payload guard, and leaves room for future shells or redirects without changing the public navigation API.
+This keeps route ownership clearer, gives payload-backed routes basic guards, and leaves room for future shells or redirects without changing the public navigation API.
 
 ---
 
@@ -259,6 +263,7 @@ This keeps route ownership clearer, gives the lyrics page a basic payload guard,
 | **Completed** | Standardize route navigation across `MainView` and `main.dart` with `GoRouter` | Low | Medium | Low |
 | **Completed** | Introduce `SongRepository`, abstract platform file picker, and decouple `Song` from `dart:io` | Medium | High | Low |
 | **Completed** | Introduce `SongLoaderController` to remove business logic from `MainView` | Medium | High | Low |
-| **Completed** | Add ChordPro parsing, chord transposition, and responsive wide-screen song layout | Medium | High | Medium |
+| **Completed** | Add ChordPro 6.101 parsing, chord transposition, localized renderer chrome, and single-column performance scrolling | Medium | High | Medium |
 | **Completed** | Extract song-loader side effects into a dedicated listener widget | Low | Medium | Low |
-| **Completed** | Nest lyrics/preferences routes beneath the main route and guard lyrics payloads | Low | Medium | Low |
+| **Completed** | Nest lyrics/preferences/editor routes beneath the main route and guard payloads | Low | Medium | Low |
+| **Completed** | Decouple `ChordProSongStore` and `ChordProPreferencesRepository` (SQLite) behind domain contracts and modularize `ChordProEditorView` widgets | Medium | High | Low |

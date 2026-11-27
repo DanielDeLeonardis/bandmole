@@ -7,13 +7,12 @@ Start here if you want the quickest path into the plan:
 3. [Requirements](./requirements.md) for the detailed feature-by-feature acceptance criteria.
 4. [Architecture](./architecture.md) for system architecture, component breakdown, and runtime data flows.
 5. [Architecture Recommendations](./architecture_recommendations.md) for architectural guidelines and refactoring status.
-6. [Release 2 Technical Debt](./release_2_tech_debt.md) for resolved findings and remaining verification limits.
+6. [Release 2 Technical Debt](./release_2_tech_debt.md) for Release 2 resolved findings and verification limits.
+7. [Release 3 Technical Debt](./release_3_tech_debt.md) for the Release 3 final review, resolved fixes, and remaining technical debt.
 
 ## Current Project Status
 
-This repository implements Release 1 (Songs Panel and lyrics performance) and Release 2 (Song Groups). The app now includes gigs and sets, native SQLite persistence, relative song references, broken-link recovery, and a locked performance set mode with a **Close set** action.
-
-Release 3 ChordPro editing is in progress; Releases 4–6 remain planned product work. The roadmap and PRD distinguish this work in progress from implemented and future requirements.
+This repository implements Release 1 (Songs Panel and lyrics performance), Release 2 (Song Groups), and Release 3 (ChordPro Editor on desktop, with Android SAF device write verification still open). Releases 4–6 remain planned product work. The roadmap and PRD distinguish implemented work from future requirements.
 
 ## What Each Document Is For
 
@@ -26,5 +25,6 @@ Release 3 ChordPro editing is in progress; Releases 4–6 remain planned product
 | [Architecture Recommendations](./architecture_recommendations.md) | Layered architecture recommendations and implemented refactoring roadmap. |
 | [Release 1 Technical Debt](./release_1_tech_debt.md) | Historical Release 1 cross-cutting review. |
 | [Release 2 Technical Debt](./release_2_tech_debt.md) | Release 2 cross-cutting implementation and verification status. |
+| [Release 3 Technical Debt](./release_3_tech_debt.md) | Release 3 final review, verification baseline, and open technical debt. |
 
-Last updated: 2026-10-16
+Last updated: 2026-11-27

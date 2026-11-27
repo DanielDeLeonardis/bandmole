@@ -33,7 +33,14 @@ class MainActivity : FlutterActivity() {
 					}
 					"scan" -> scan(call.argument<String>("treeUri"), result)
 					"read" -> read(call.argument<String>("uri"), result)
-					"writeSong" -> writeSong(call.argument<String>("uri"), call.argument<String>("treeUri"), call.argument<String>("relativePath"), call.argument<String>("text"), result)
+					"writeSong" -> writeSong(
+						call.argument<String>("uri"),
+						call.argument<String>("treeUri"),
+						call.argument<String>("relativePath"),
+						call.argument<String>("text"),
+						call.argument<Boolean>("overwrite") ?: false,
+						result,
+					)
 					else -> result.notImplemented()
 				}
 			}
@@ -85,9 +92,9 @@ class MainActivity : FlutterActivity() {
 					val nameIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
 					val mimeIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
 					while (cursor.moveToNext()) {
-						val id = cursor.getString(idIndex)
-						val name = cursor.getString(nameIndex)
-						val mime = cursor.getString(mimeIndex)
+						val id = cursor.getString(idIndex) ?: continue
+						val name = cursor.getString(nameIndex) ?: continue
+						val mime = cursor.getString(mimeIndex) ?: ""
 						val childPath = if (relativePath.isEmpty()) name else "$relativePath/$name"
 						if (mime == DocumentsContract.Document.MIME_TYPE_DIR) {
 							queue.add(id to childPath)
@@ -125,6 +132,7 @@ class MainActivity : FlutterActivity() {
 		treeUriString: String?,
 		relativePath: String?,
 		text: String?,
+		overwrite: Boolean,
 		result: MethodChannel.Result,
 	) {
 		if (text == null) {
@@ -162,8 +170,9 @@ class MainActivity : FlutterActivity() {
 						val nameIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
 						val mimeIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
 						while (cursor.moveToNext()) {
-							if (cursor.getString(nameIndex) == folder &&
-								cursor.getString(mimeIndex) == DocumentsContract.Document.MIME_TYPE_DIR) {
+							val name = cursor.getString(nameIndex) ?: continue
+							val mime = cursor.getString(mimeIndex) ?: ""
+							if (name == folder && mime == DocumentsContract.Document.MIME_TYPE_DIR) {
 								foundId = cursor.getString(idIndex)
 								break
 							}
@@ -172,29 +181,58 @@ class MainActivity : FlutterActivity() {
 					parentId = foundId ?: throw IllegalArgumentException("Song folder is unavailable")
 				}
 				val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId)
+				var existingDocumentId: String? = null
 				contentResolver.query(
 					childrenUri,
-					arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME),
+					arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID, DocumentsContract.Document.COLUMN_DISPLAY_NAME),
 					null,
 					null,
 					null,
 				)?.use { cursor ->
+					val idIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
 					val nameIndex = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
 					while (cursor.moveToNext()) {
-						if (cursor.getString(nameIndex).equals(components.last(), ignoreCase = true)) {
-							throw IllegalStateException("Song file already exists")
+						val name = cursor.getString(nameIndex) ?: continue
+						if (name.equals(components.last(), ignoreCase = true)) {
+							existingDocumentId = cursor.getString(idIndex)
+							break
 						}
 					}
 				}
-				val parentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, parentId)
-				DocumentsContract.createDocument(contentResolver, parentUri, "text/plain", components.last())
-					?: throw IllegalStateException("Unable to create song")
+				if (existingDocumentId != null) {
+					if (!overwrite) {
+						result.error("EXISTS", "Song file already exists", null)
+						return
+					}
+					DocumentsContract.buildDocumentUriUsingTree(treeUri, existingDocumentId)
+				} else {
+					val parentUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, parentId)
+					val created = DocumentsContract.createDocument(
+						contentResolver,
+						parentUri,
+						"application/octet-stream",
+						components.last(),
+					) ?: throw IllegalStateException("Unable to create song")
+					createdUri = created
+					created
+				}
 			}
-			if (uriString == null) createdUri = destination
-			contentResolver.openOutputStream(destination, "wt").use { output ->
+			val outputStream = try {
+				contentResolver.openOutputStream(destination, "wt")
+			} catch (_: UnsupportedOperationException) {
+				contentResolver.openOutputStream(destination, "w")
+			} catch (_: IllegalArgumentException) {
+				contentResolver.openOutputStream(destination, "w")
+			}
+			outputStream.use { output ->
 				(output ?: throw IllegalStateException("Unable to open song")).write(text.toByteArray(Charsets.UTF_8))
 			}
 			result.success(destination.toString())
+		} catch (error: SecurityException) {
+			createdUri?.let {
+				try { DocumentsContract.deleteDocument(contentResolver, it) } catch (_: Exception) {}
+			}
+			result.error("PERMISSION", "Write permission required for song library", error.message)
 		} catch (error: Exception) {
 			createdUri?.let {
 				try { DocumentsContract.deleteDocument(contentResolver, it) } catch (_: Exception) {}
@@ -202,6 +240,7 @@ class MainActivity : FlutterActivity() {
 			result.error("WRITE", "Unable to save song", error.message)
 		}
 	}
+
 	private fun supported(name: String): Boolean {
 		val lowerName = name.lowercase()
 		return listOf(".cho", ".crd", ".chopro", ".chordpro", ".pro", ".txt")

@@ -1,4 +1,4 @@
-﻿# Release 2 Cross-Cutting Technical Debt
+# Release 2 Cross-Cutting Technical Debt
 
 > Status: Implemented in code. Reviewed against the Cross-Cutting Technical Requirements on 2026-10-16.
 
@@ -36,4 +36,4 @@ Resolved in the UI and controller. Opening a gig song locks the Songs library an
 - CI pins Flutter `3.47.1` on the stable channel.
 - Linux and Web are identified as next platforms. Browser storage/file-handle support is therefore deferred from this Release 2 register.
 - Screen-reader support is explicitly listed as a later-phase enhancement; this register does not treat it as a launch acceptance failure.
-- A Windows Flutter accessibility-bridge `Failed to update ui::AXTree` log has been reported. Its runtime cause and resolution are not confirmed by widget tests; verify on a Windows build with the accessibility service before treating this as closed.
+- A Windows Flutter accessibility-bridge `Failed to update ui::AXTree` log (tracked upstream in Flutter `#100610` / `#182444`) is mitigated by wrapping `MaterialApp.router` in `ExcludeSemantics` on Windows (`lib/src/app.dart`) while screen-reader support remains a later-phase goal. Keyboard-only navigation is unaffected; revisit and remove the Windows `ExcludeSemantics` wrapper when implementing screen-reader support on a fixed Flutter version.
