@@ -33,4 +33,24 @@ class AndroidSafLibrary {
     });
     return bytes ?? const <int>[];
   }
+
+  Future<String> writeSong({
+    String? uri,
+    String? treeUri,
+    String? relativePath,
+    required String text,
+    bool overwrite = false,
+  }) async {
+    final savedUri = await _channel.invokeMethod<String>('writeSong', {
+      'uri': uri,
+      'treeUri': treeUri,
+      'relativePath': relativePath,
+      'text': text,
+      'overwrite': overwrite,
+    });
+    if (savedUri == null) {
+      throw StateError('Android did not return the saved song URI.');
+    }
+    return savedUri;
+  }
 }

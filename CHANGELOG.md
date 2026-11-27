@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Release 3: ChordPro Editor**:
+  - Added source editing, live preview, directive/section outline with keyboard-accessible reordering, draggable chord and directive palettes, keyboard shortcuts (`Ctrl+S`, `Esc`), and unsaved-change protection.
+  - Implemented all 26 Release 3 ChordPro 6.101 directives in `SongFormatter` and `SongTextRenderer` (metadata, repeated values, `{meta:}`, short aliases, `{transpose}`, `{chorus}` recall, `{chord}` inline diagrams, `{diagrams}` placement, title/chord font/size/colour directives, keyboard diagrams, muted `-1` frets, and chord-only lines).
+  - Added conservative explicit text-to-ChordPro conversion (keeping plain-text source read-only until converted, supporting inline, separate-line, and above-lyric chords plus unambiguous section headers), separate `.chopro` saves with explicit overwrite confirmation, global and per-song custom directives with normalized uniqueness, `scroll_speed` support, and persisted hint dismissal.
+  - Added atomic desktop saves behind a platform-neutral `ChordProSongStore` contract, SQLite-backed global custom directives with legacy `SharedPreferences` migration, modular editor widgets/dialogs, localized renderer chrome labels, `%{meta}` interpolation, mid-song chord style overrides, conversion ambiguity notices, automatic gig broken-link refresh on save, `.gitattributes`, Android SAF write fixes (`application/octet-stream` MIME type, overwrite support, write-permission error mapping), `chordpro_editor` and `navigation` coverage-gate enforcement, and full `MyApp` desktop integration coverage; Android device verification remains open.
 - **Release 2: Song Groups**:
   - Added gig and set creation, editing, ordering, and song assignment with normalized title uniqueness and duplicate-song validation across a gig.
   - Added native SQLite persistence for gigs and sets, including migration of legacy JSON gig records.
@@ -28,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added lifecycle-safe state handling for snackbars, route transitions, and scroll cleanup through post-frame callbacks so provider updates do not run against a deactivated widget tree.
 
 ### Fixed
+- **Windows Accessibility Bridge (`ui::AXTree`)**:
+  - Wrapped `MaterialApp.router` in `ExcludeSemantics` on Windows (`lib/src/app.dart`) to prevent Flutter `3.47.1` Windows `accessibility_bridge.cc` `Failed to update ui::AXTree` runtime errors while screen-reader support remains deferred and keyboard-only navigation stays intact.
 - **Release 2 set mode**: Blocked Songs library selection and panel tab switching while a gig song is active; **Close set** restores access and clears active navigation state. The song header now uses readable gig/set/position separators.
 - **Static Analysis**:
   - Removed unused optional constructor parameters (`type`, `label`) from `_SongSectionBuilder` in `lib/src/features/lyrics_scroller/domain/song_formatting.dart` to resolve `unused_element_parameter` analyzer warnings.
@@ -57,16 +64,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rich Chord & Song Formatting**:
   - Added a pure Dart `SongFormatter` that parses ChordPro-style chord charts, metadata, and section markers into renderable song sections.
   - Introduced chord transposition controls in `SongView`, with a `SongTransposeNotifier` to shift the displayed key up or down semitones. Those controls are enabled only for ChordPro songs, and plain text songs automatically reset the transpose offset to zero when opened.
-  - Updated the lyric renderer to preserve plain-text songs while rendering chord charts in rich chord-over-lyric rows, with a responsive two- or three-column layout on wide desktop windows.
+  - Updated the lyric renderer to preserve plain-text songs while rendering chord charts in rich chord-over-lyric rows, using a predictable single-column layout in `AutoScrollableTextWidget` (`allowMultiColumnLayout: false`) for performance auto-scrolling.
   - Added unit coverage for chord parsing and transposition in `test/src/features/lyrics_scroller/domain/song_formatting_test.dart`.
 
-### Added
+### Documentation
 - **Product & Requirements Documentation**:
   - Added **Release 6: Data Import and Export** specifications to `docs/requirements.md`, `docs/roadmap.md`, and `docs/prd.md`, defining full and granular export/import of songs, setlists, and app preferences via portable `.zip` bundles with interactive overwrite warnings and skip/proceed choices.
   - Specified cross-device relative path referencing for song assignments in gigs and sets.
   - Added broken-link specifications for gigs containing missing song files, enabling performers to re-link or remove missing items while keeping the gig editable.
   - Added user confirmation prompts (Save / Discard / Cancel) when navigating away from the editor or switching songs with unsaved changes.
-  - Updated `docs/index.md` and `README.md` to reference the complete documentation suite, including system architecture and technical recommendations.
+  - Added `docs/release_3_tech_debt.md` and synchronized `AGENTS.md`, `README.md`, `docs/index.md`, `docs/roadmap.md`, `docs/prd.md`, `docs/requirements.md`, `docs/architecture.md`, and `docs/architecture_recommendations.md` with the implemented Release 3 desktop state.
 
 ## [1.0.3] - 2026-09-11
 

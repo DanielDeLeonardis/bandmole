@@ -14,7 +14,7 @@ BandMole is a Flutter application designed for musicians and performers to displ
 
 BandMole implements Release 1 (Songs Panel and lyrics performance) and Release 2 (Song Groups). The app includes a recursively scanned song library, persisted root selection, Android Storage Access Framework access, lyric scrolling, and native gigs and sets backed by SQLite.
 
-ChordPro editing, Song Charts, Metadata, and Data Import/Export remain planned. See the [roadmap](docs/roadmap.md) for their scope.
+Release 3 (ChordPro Editor) is implemented on desktop with Android SAF device write verification still open; Song Charts, Metadata, and Data Import/Export remain planned. See the [roadmap](docs/roadmap.md) for their scope.
 
 ---
 
@@ -25,7 +25,7 @@ ChordPro editing, Song Charts, Metadata, and Data Import/Export remain planned. 
   - Play / Stop toggle with immediate halt on touch gestures or stop button.
   - Quick navigation controls: **Go to Start** and **Go to End** driven by a unified scroll-command state in Riverpod.
   - Automatic button state updates, disabling transport buttons when already at the start or end, or when content fits within the screen, and re-evaluating that state when the window is resized.
-  - Responsive song rendering that splits chord charts into side-by-side columns on wide desktop windows.
+  - Single-column auto-scrolling song rendering in performance view so scrolling stays predictable for long songs.
 
 - **Typography & Readability**:
   - Monospaced typography (`Consolas`) to maintain accurate alignment of chords and lyrics.
@@ -47,12 +47,17 @@ ChordPro editing, Song Charts, Metadata, and Data Import/Export remain planned. 
   - Keep song assignments relative to the selected library root; show missing songs as broken links that can be removed or relinked.
   - Open a gig song in performance set mode with previous/next navigation across sets. While a set is open, the Songs library and panel tabs are locked; **Close set** restores normal navigation.
 
+- **ChordPro Editor (Release 3)**:
+  - Create or edit ChordPro songs, preview formatted lyrics and chords with all 26 Release 3 ChordPro 6.101 directives (plus `%{meta}` interpolation and per-line chord styling), inspect directives and sections with keyboard-accessible reordering, and insert chords/directives from draggable palettes.
+  - Convert plain-text chord sheets explicitly (keeping source read-only until converted, with conversion ambiguity notices) and save a separate `.chopro` file with an explicit overwrite confirmation dialog while leaving the source unchanged. Save/Discard/Cancel protects unsaved edits, and saving automatically refreshes loaded gigs to clear matching broken links.
+  - Atomic desktop saves behind a platform-neutral `ChordProSongStore`, SQLite-backed global custom directives (with legacy `SharedPreferences` migration), per-song custom directives, `scroll_speed`, and dismissed hints persist locally. Android SAF write verification on device remains open.
+
 - **Theme Preferences**:
   - Customizable color themes, including dark themes optimized for low-light stage performance.
   - Asynchronous theme persistence via local preferences.
 
 - **Declarative Navigation**:
-  - Centralized route handling with `GoRouter` and nested named routes for the main screen, lyrics view, and preferences view.
+  - Centralized route handling with `GoRouter` and nested named routes for the main screen, lyrics view, preferences view, and editor.
   - The lyrics route expects a `Song` payload and redirects back home if it is opened without one.
   - Preferences and the standalone lyrics route use `MaterialApp.router`; the active song is displayed inside `MainView`.
 
@@ -64,8 +69,8 @@ ChordPro editing, Song Charts, Metadata, and Data Import/Export remain planned. 
 - **State Management**: [Flutter Riverpod](https://riverpod.dev/) (`flutter_riverpod` + `riverpod_annotation` / `riverpod_generator`)
 - **Navigation**: [GoRouter](https://pub.dev/packages/go_router) with `MaterialApp.router`
 - **Data Modeling**: [Freezed](https://pub.dev/packages/freezed) immutable state objects
-- **Storage**: [shared_preferences](https://pub.dev/packages/shared_preferences) for configuration; SQLite (`sqflite` / `sqflite_common_ffi`) for native gig and set data
-- **File System**: repository-based, platform-specific directory access with `filepicker_windows` used only by the Windows picker implementation
+- **Storage**: [shared_preferences](https://pub.dev/packages/shared_preferences) for configuration; SQLite (`sqflite` / `sqflite_common_ffi`) for native gig/set data and global custom ChordPro directives
+- **File System**: repository-based, platform-specific directory access and atomic song writes (`SongRepository`, `ChordProSongStore`), with `filepicker_windows` used only by the Windows picker implementation
 
 ---
 
@@ -74,6 +79,7 @@ ChordPro editing, Song Charts, Metadata, and Data Import/Export remain planned. 
 ```text
 lib/
 |-- main.dart                  # Application entry point
+|-- l10n/                      # ARB localization resources and generated AppLocalizations
 `-- src/
     |-- app.dart               # MaterialApp configuration and route handling
     |-- core/
@@ -81,6 +87,10 @@ lib/
     |       |-- tool_tip_raised_button_widget.dart
     |       `-- tool_tip_rounded_text_widget.dart
     |-- features/
+        |-- chordpro_editor/
+        |   |-- data/             # Io/unsupported song stores, SQLite directive repository
+        |   |-- domain/           # ChordProDocument, store and preferences contracts
+        |   `-- presentation/     # Editor view, palettes, outline, dialogs, providers
         |-- lyrics_scroller/
         |   |-- domain/
         |   |   |-- auto_scrollable_text.dart
@@ -198,7 +208,14 @@ Run the Release 2 gig/set workflow on Windows:
 ```bash
 flutter test integration_test/release_2_workflow_test.dart -d windows
 ```
-This exercises setlist interactions, repository reopening, and keyboard navigation. The 80% branch-coverage gate is a target, not a percentage asserted by this README.
+This exercises setlist interactions, repository reopening, and keyboard navigation.
+
+Run the Release 3 desktop editor round-trip:
+```bash
+flutter test integration_test/release_3_workflow_test.dart -d windows
+```
+This exercises read-only `.txt` conversion, keyboard section reordering, SQLite custom-directive persistence, `Ctrl+S`/`Esc` shortcuts, gig broken-link refresh, `scroll_speed` reload, and explicit overwrite confirmation.
+The 80% branch-coverage gate is a target checked by `tool/check_coverage.dart` across all feature areas and shared navigation, not a static percentage asserted by this README.
 
 Android library access uses a persisted Storage Access Framework tree grant. The
 device workflow should select a shared-storage folder, verify nested song
@@ -219,4 +236,5 @@ Comprehensive product and technical documentation is maintained in the [`docs/`]
 - [Architecture](docs/architecture.md) — Component breakdown, state flows, and layered architecture
 - [Architecture Recommendations](docs/architecture_recommendations.md) — Modularity guidelines and implemented refactoring roadmap
 - [Release 2 Technical Debt](docs/release_2_tech_debt.md) — Resolved cross-cutting findings and verification limits
+- [Release 3 Technical Debt](docs/release_3_tech_debt.md) — Final Release 3 review, resolved findings, verification baseline, and remaining open items
 

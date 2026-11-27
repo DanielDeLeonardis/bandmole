@@ -1,5 +1,6 @@
-﻿import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/auto_scrollable_text_provider.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/providers/auto_scrollable_text_provider.dart';
 import 'package:bandmole/src/features/lyrics_scroller/presentation/widgets/auto_scrollable_text_widget.dart';
+import 'package:bandmole/src/features/lyrics_scroller/presentation/widgets/song_text_renderer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,6 +33,9 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
+
+    final renderer = tester.widget<SongTextRenderer>(find.byType(SongTextRenderer));
+    expect(renderer.allowMultiColumnLayout, isFalse);
 
     ScrollableState scrollableState() =>
         tester.state<ScrollableState>(scrollableFinder);

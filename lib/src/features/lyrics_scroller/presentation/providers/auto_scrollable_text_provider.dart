@@ -37,6 +37,10 @@ class AutoScrollableTextNotifier extends Notifier<AutoScrollableText> {
     }
   }
 
+  void setScrollSpeed(int value) {
+    state = state.copyWith(scrollSpeed: value.clamp(1, 99));
+  }
+
   int increaseScrollSpeed() {
     if (state.scrollSpeed < 99) {
       state = state.copyWith(scrollSpeed: state.scrollSpeed + 1);

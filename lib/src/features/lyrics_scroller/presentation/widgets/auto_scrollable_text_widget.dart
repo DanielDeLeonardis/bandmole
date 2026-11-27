@@ -248,7 +248,11 @@ class _AutoScrollableTextWidgetState
         padding: const EdgeInsets.all(12.0),
         child: SingleChildScrollView(
           controller: _scrollController,
-          child: SongTextRenderer(song: song, fontSize: model.textFontSize),
+          child: SongTextRenderer(
+            song: song,
+            fontSize: model.textFontSize,
+            allowMultiColumnLayout: false,
+          ),
         ),
       ),
     );

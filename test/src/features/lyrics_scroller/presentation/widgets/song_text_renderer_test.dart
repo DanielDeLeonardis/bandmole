@@ -24,6 +24,66 @@ void main() {
     expect(find.text('Verse'), findsNothing);
   });
 
+  testWidgets('renders defined chord diagrams in the preview header', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+
+    final song = SongFormatter.parse(
+      '{define: Am7 frets 0 0 2 0 1 0}\n[C]Hello',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox.expand(
+            child: SongTextRenderer(song: song, fontSize: 18),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey<String>('chord-diagram-Am7')),
+      findsOneWidget,
+    );
+    expect(find.text('Am7'), findsOneWidget);
+  });
+
+  testWidgets('renders the define directive chord diagrams from the preview header', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+
+    final song = SongFormatter.parse(
+      '{define: [F#/G#] base-fret 1 frets  4-x-4-3-2-2}\n'
+      '{define: C#/G# base-fret 1 frets 4-x-6-6-6-4}\n'
+      '{define: D#m/G# base-fret 1 frets 4-x-4-3-4-x}\n'
+      '{define: G#m7 base-fret 1 frets 4-6-4-4-4-4}\n[C]Hello',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox.expand(
+            child: SongTextRenderer(song: song, fontSize: 18),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey<String>('chord-diagram-F#/G#')), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('chord-diagram-C#/G#')), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('chord-diagram-D#m/G#')), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('chord-diagram-G#m7')), findsOneWidget);
+    expect(find.text('F#/G#'), findsOneWidget);
+    expect(find.text('G#m7'), findsOneWidget);
+  });
+
   testWidgets('renders rich metadata, blank lines, chords, and three columns', (
     tester,
   ) async {
@@ -95,6 +155,40 @@ void main() {
     expect(find.byType(Wrap), findsWidgets);
   });
 
+  testWidgets('single-column mode stays narrow on wide screens', (tester) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1700, 1000));
+
+    final song = SongFormattingResult(
+      rawText: '',
+      hasRichFormatting: true,
+      sections: const [
+        SongSection(type: SongSectionType.verse, lines: [SongLine(segments: [SongLineSegment(lyric: 'One')])]),
+        SongSection(type: SongSectionType.chorus, lines: [SongLine(segments: [SongLineSegment(lyric: 'Two')])]),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox.expand(
+            child: SongTextRenderer(
+              song: song,
+              fontSize: 18,
+              allowMultiColumnLayout: false,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey<String>('song_text_renderer_narrow_layout')), findsOneWidget);
+    expect(find.byKey(const ValueKey<String>('song_text_renderer_wide_layout')), findsNothing);
+    expect(find.text('One'), findsOneWidget);
+    expect(find.text('Two'), findsOneWidget);
+  });
+
   testWidgets('wide layout falls back for zero or one section', (tester) async {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.binding.setSurfaceSize(const Size(1600, 900));
@@ -128,5 +222,70 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('One section'), findsOneWidget);
+  });
+
+  testWidgets('renders Release 3 metadata, styling, bottom/inline/keyboard diagrams, comments, and chord-only lines', (
+    tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1000, 1200));
+
+    final song = SongFormatter.parse('''
+{title: Styled Song}
+{subtitle: Sub 1}
+{subtitle: Sub 2}
+{album: Album Name}
+{year: 2026}
+{composer: Comp}
+{lyricist: Lyr}
+{arranger: Arr}
+{tempo: 110}
+{time: 3/4}
+{duration: 4:00}
+{titlecolour: #0f0}
+{chordcolour: red}
+{diagrams: bottom}
+{define: PianoC keys 0 4 7 12}
+{start_of_chorus}
+[C][G][Am]
+{end_of_chorus}
+{chord: PianoC}
+{c: Note}
+{ci: Italic}
+{cb: Boxed}
+''');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SongTextRenderer(song: song, fontSize: 18),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Styled Song'), findsOneWidget);
+    expect(find.text('Sub 1'), findsOneWidget);
+    expect(find.text('Sub 2'), findsOneWidget);
+    expect(find.text('Album: Album Name'), findsOneWidget);
+    expect(find.text('Year: 2026'), findsOneWidget);
+    expect(find.text('Composer: Comp'), findsOneWidget);
+    expect(find.text('Lyricist: Lyr'), findsOneWidget);
+    expect(find.text('Arranger: Arr'), findsOneWidget);
+    expect(find.text('Tempo: 110'), findsOneWidget);
+    expect(find.text('Time: 3/4'), findsOneWidget);
+    expect(find.text('Duration: 4:00'), findsOneWidget);
+    expect(find.text('C'), findsOneWidget);
+    expect(find.text('G'), findsOneWidget);
+    expect(find.text('Am'), findsOneWidget);
+    expect(find.text('Note'), findsOneWidget);
+    expect(find.text('Italic'), findsOneWidget);
+    expect(find.text('Boxed'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('song_text_renderer_bottom_diagrams')),
+      findsOneWidget,
+    );
   });
 }

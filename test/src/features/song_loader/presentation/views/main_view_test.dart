@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:bandmole/main.dart';
+import 'package:bandmole/src/features/chordpro_editor/data/sqlite_chordpro_preferences_repository.dart';
+import 'package:bandmole/src/features/chordpro_editor/presentation/providers/chordpro_preferences_provider.dart';
 import 'package:bandmole/src/features/lyrics_scroller/presentation/views/song_view.dart';
 import 'package:bandmole/src/features/lyrics_scroller/presentation/widgets/auto_scrollable_text_widget.dart';
 import 'package:bandmole/src/features/preferences/presentation/views/preferences_view.dart';
@@ -857,6 +859,77 @@ void main() {
     expect(tester.widget<TabBar>(find.byType(TabBar)).controller!.index, 1);
     semantics.dispose();
   });
+
+  testWidgets('MyApp creates and edits ChordPro songs from MainView and applies scroll_speed', (
+    WidgetTester tester,
+  ) async {
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.binding.setSurfaceSize(const Size(1280, 900));
+    final library = await _createSongLibrary(tester, {
+      'existing.chopro': '{title: Existing}\n{scroll_speed: 11}\n[C]Hello',
+    });
+    addTearDown(() => tester.runAsync(() => library.delete(recursive: true)));
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          songRepositoryProvider.overrideWithValue(_SyncDiskSongRepository()),
+          gigRepositoryProvider.overrideWithValue(_MemoryGigRepository()),
+          chordProPreferencesRepositoryProvider.overrideWithValue(
+            SharedPreferencesChordProPreferencesRepository(),
+          ),
+        ],
+        child: const MyApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Open existing ChordPro song and verify scroll_speed directive applies
+    await tester.tap(find.text('existing.chopro'));
+    await tester.pumpAndSettle();
+    expect(find.text('11', skipOffstage: false), findsOneWidget);
+
+    // Edit existing song from MainView
+    await tester.tap(find.byKey(const ValueKey<String>('edit_chordpro_button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey<String>('chordpro_source')), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    // Create a new ChordPro song via MainView -> GoRouter -> ChordProEditorView
+    await tester.tap(find.byKey(const ValueKey<String>('new_chordpro_button')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('chordpro_filename')),
+      'Fresh Song',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey<String>('chordpro_source')),
+      '{title: Fresh Song}\n{scroll_speed: 9}\n[G]Created',
+    );
+    await tester.pump();
+    await tester.runAsync(() async {
+      await tester.tap(find.byKey(const ValueKey<String>('chordpro_save')));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    });
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Fresh Song.chopro'), findsOneWidget);
+    expect(find.text('9', skipOffstage: false), findsOneWidget);
+  });
+}
+
+class _SyncDiskSongRepository implements SongRepository {
+  @override
+  Future<Song> loadSong(SongFile file) async {
+    final text = File(file.path).readAsStringSync();
+    return Song(file: file, text: text, isMalformed: false);
+  }
+
+  @override
+  Future<SongFile?> pickSongFile() async => null;
 }
 
 Future<Directory> _createSongLibrary(

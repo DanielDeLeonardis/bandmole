@@ -5,6 +5,8 @@ const featureRoots = <String, String>{
   'lyrics_scroller': 'lib/src/features/lyrics_scroller/',
   'preferences': 'lib/src/features/preferences/',
   'song_groups': 'lib/src/features/song_groups/',
+  'chordpro_editor': 'lib/src/features/chordpro_editor/',
+  'navigation': 'lib/src/navigation/',
 };
 
 void main() {
